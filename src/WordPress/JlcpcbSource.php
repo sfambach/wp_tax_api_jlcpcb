@@ -2,23 +2,31 @@
 
 namespace TaxApiJlcpcb\WordPress;
 
+use DateTimeImmutable;
 use Taxmod\Core\Import\EnrichingSource;
+use Taxmod\Core\Import\FetchBatch;
+use Taxmod\Core\Import\FetchingSource;
 use Taxmod\Core\Import\OrderProposal;
 use TaxApiJlcpcb\Core\Api\JlcApiException;
 use TaxApiJlcpcb\Core\Api\JlcClient;
 use TaxApiJlcpcb\Core\Enrich\PriceCompletion;
+use TaxApiJlcpcb\Core\Feed\OrderFeed;
+use TaxApiJlcpcb\Core\Orders\BatchList;
 use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
 
 /**
- * JLCPCB as a source of the modeller's inbox (D-952, D-953): it completes the JLCPCB proposals of other sources with
- * prices and creates nothing. A failed call leaves the proposal as it is; the last error shows in the tab.
+ * JLCPCB as a source of the modeller's inbox (D-952): it brings the JLCPCB orders itself — the API is the truth, mail
+ * only the status (D-965) — and still completes JLCPCB proposals of other sources with prices. A failed completion
+ * leaves the proposal as it is and shows in the tab; a failed fetch is thrown, the inbox shows it.
  *
  * @see https://github.com/sfambach/wp-taxonomy-modeler/blob/main/docs/pakete/import/konzept.md
  */
-final class JlcpcbSource implements EnrichingSource
+final class JlcpcbSource implements FetchingSource, EnrichingSource
 {
-    public const PLATFORM     = 'JLCPCB';
+    public const PLATFORM     = OrderFeed::PLATFORM;
     public const ERROR_OPTION = 'taxmod_jlcpcb_last_enrich_error';
+    /** Four runs a day: «zwei bis 4x täglich api» (D-962). */
+    public const INTERVAL = 6 * HOUR_IN_SECONDS;
 
     public function key(): string
     {
@@ -30,6 +38,18 @@ final class JlcpcbSource implements EnrichingSource
         return __('JLCPCB', 'taxapijlcpcb');
     }
 
+    public function interval(): int
+    {
+        return self::INTERVAL;
+    }
+
+    public function fetch(?string $cursor): FetchBatch
+    {
+        $client = self::client() ?? throw new JlcApiException(__('The JLCPCB keys are missing.', 'taxapijlcpcb'));
+
+        return (new OrderFeed(new BatchList($client), new OrderDetailQuery($client), wp_timezone()))->run($cursor, new DateTimeImmutable('now'));
+    }
+
     public function enriches(): array
     {
         return [self::PLATFORM];
@@ -37,14 +57,13 @@ final class JlcpcbSource implements EnrichingSource
 
     public function enrich(OrderProposal $proposal): ?OrderProposal
     {
-        $credentials = (new StoredCredentials())->credentials();
+        $client = self::client();
 
-        if ($credentials === null || preg_match('/^W\d{14,16}$/', trim($proposal->orderNumber)) !== 1) {
+        if ($client === null || preg_match('/^W\d{14,16}$/', trim($proposal->orderNumber)) !== 1) {
             return null;
         }
 
         try {
-            $client = new JlcClient(new WpHttpTransport(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL);
             $details = (new OrderDetailQuery($client))->batch(trim($proposal->orderNumber));
 
             return (new PriceCompletion(wp_timezone()))->complete($proposal, $details);
@@ -53,5 +72,12 @@ final class JlcpcbSource implements EnrichingSource
 
             return null;
         }
+    }
+
+    private static function client(): ?JlcClient
+    {
+        $credentials = (new StoredCredentials())->credentials();
+
+        return $credentials === null ? null : new JlcClient(new WpHttpTransport(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL);
     }
 }

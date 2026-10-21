@@ -16,7 +16,7 @@ use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
  */
 final class Plugin
 {
-    public const VERSION    = '0.0.9';
+    public const VERSION    = '0.1.0';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -35,6 +35,14 @@ final class Plugin
         // The inbox of the modeller 0.1.35 or later; without it the module only tests and lists.
         if (interface_exists(\Taxmod\Core\Import\EnrichingSource::class)) {
             add_filter('taxmod_import_sources', static fn (array $sources): array => [...$sources, new JlcpcbSource()]);
+            // The API brings new JLCPCB orders and their prices; mail is left the status (D-965, D-961). The status row
+            // stays open so the tracking number of the API counts as well; the table keys platforms in lower case.
+            add_filter('taxmod_import_duties', static function (array $rows): array {
+                $platform = mb_strtolower(JlcpcbSource::PLATFORM);
+                $rows[$platform] = array_replace($rows[$platform] ?? [], ['orders' => Plugin::TAB, 'prices' => Plugin::TAB]);
+
+                return $rows;
+            });
         }
         add_action('admin_notices', $plugin->noticeWithoutTabs(...));
     }

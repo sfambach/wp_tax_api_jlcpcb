@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       Taxmod JLCPCB
  * Description:       Connects the owner's JLCPCB API app and completes JLCPCB orders for the Taxonomy Modeller with prices and production state; only picked data is written.
- * Version:           0.0.9
+ * Version:           0.1.0
  * Requires at least: 6.9
  * Requires PHP:      8.2
  * Author:            Stefan Fambach (SteFam)

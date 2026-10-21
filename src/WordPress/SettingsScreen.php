@@ -221,7 +221,7 @@ final class SettingsScreen
             __('Enter the three values in this tab and save. The SecretKey is stored encrypted and is not shown again. Constants in wp-config.php (TAXJLCPCB_APP_ID, TAXJLCPCB_ACCESS_KEY, TAXJLCPCB_SECRET_KEY) take precedence.', 'taxapijlcpcb'),
             __('Click «Test connection». It reads one public component and changes nothing.', 'taxapijlcpcb'),
             __('Click «List orders of the last 365 days» to see the order numbers of the last year, and «Details» for the amounts of one order.', 'taxapijlcpcb'),
-            __('JLCPCB orders arriving in the inbox (for example from the mail import) get their empty prices, shipping, total, date and tracking number filled in. Amounts stay in USD.', 'taxapijlcpcb'),
+            __('From then on the module brings your JLCPCB orders into the inbox four times a day; the first run reaches back a year and compares them with the model. Mail only adds the status. Amounts stay in USD.', 'taxapijlcpcb'),
         ];
 
         return '<ol>' . implode('', array_map(static fn (string $step): string => '<li>' . esc_html($step) . '</li>', $steps)) . '</ol>'
