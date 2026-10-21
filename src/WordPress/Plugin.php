@@ -16,7 +16,7 @@ use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.0';
+    public const VERSION    = '0.1.1';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -32,19 +32,27 @@ final class Plugin
         add_action('admin_post_taxapijlcpcb_list', $plugin->handleList(...));
         add_action('admin_post_taxapijlcpcb_detail', $plugin->handleDetail(...));
 
-        // The inbox of the modeller 0.1.35 or later; without it the module only tests and lists.
-        if (interface_exists(\Taxmod\Core\Import\EnrichingSource::class)) {
-            add_filter('taxmod_import_sources', static fn (array $sources): array => [...$sources, new JlcpcbSource()]);
-            // The API brings new JLCPCB orders and their prices; mail is left the status (D-965, D-961). The status row
-            // stays open so the tracking number of the API counts as well; the table keys platforms in lower case.
-            add_filter('taxmod_import_duties', static function (array $rows): array {
-                $platform = mb_strtolower(JlcpcbSource::PLATFORM);
-                $rows[$platform] = array_replace($rows[$platform] ?? [], ['orders' => Plugin::TAB, 'prices' => Plugin::TAB]);
-
+        // The inbox of the modeller 0.1.35 or later; without it the module only tests and lists. Checked when the filter
+        // runs, not here: this file loads before the modeller's (alphabetical order), when its classes are not known yet.
+        add_filter('taxmod_import_sources', static fn (array $sources): array => self::hasInbox() ? [...$sources, new JlcpcbSource()] : $sources);
+        // The API brings new JLCPCB orders and their prices; mail is left the status (D-965, D-961). The status row stays
+        // open so the tracking number of the API counts as well; the table keys platforms in lower case.
+        add_filter('taxmod_import_duties', static function (array $rows): array {
+            if (! self::hasInbox()) {
                 return $rows;
-            });
-        }
+            }
+
+            $platform = mb_strtolower(JlcpcbSource::PLATFORM);
+            $rows[$platform] = array_replace($rows[$platform] ?? [], ['orders' => self::TAB, 'prices' => self::TAB]);
+
+            return $rows;
+        });
         add_action('admin_notices', $plugin->noticeWithoutTabs(...));
+    }
+
+    private static function hasInbox(): bool
+    {
+        return interface_exists(\Taxmod\Core\Import\FetchingSource::class) && interface_exists(\Taxmod\Core\Import\EnrichingSource::class);
     }
 
     /**
