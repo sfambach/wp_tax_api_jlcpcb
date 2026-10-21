@@ -15,7 +15,11 @@ final class SettingsScreen
     /** @param list<array{ok: bool, text: string}> $notices */
     public function fields(array $notices): string
     {
-        $html = '';
+        $html = '<p class="description">' . esc_html(sprintf(
+            /* translators: %s: plugin version */
+            __('Taxmod JLCPCB %s', 'taxapijlcpcb'),
+            Plugin::VERSION
+        )) . '</p>';
 
         foreach ($notices as $notice) {
             $html .= '<div class="notice ' . ($notice['ok'] ? 'notice-success' : 'notice-error') . ' inline"><p>'
