@@ -14,7 +14,7 @@ use TaxApiJlcpcb\Core\Api\JlcClient;
  */
 final class Plugin
 {
-    public const VERSION    = '0.0.1';
+    public const VERSION    = '0.0.2';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -38,9 +38,8 @@ final class Plugin
     {
         $tabs[self::TAB] = [
             'title'  => __('JLCPCB', 'taxapijlcpcb'),
-            'render' => fn (): string => (new SettingsScreen(new ConstantCredentials()))->fields($this->takeNotices()),
-            // Nothing to save: the keys live in wp-config.php.
-            'save'   => static fn (array $post): bool => true,
+            'render' => fn (): string => (new SettingsScreen(new StoredCredentials()))->fields($this->takeNotices()),
+            'save'   => static fn (array $post): bool => self::saveKeys($post),
         ];
 
         return $tabs;
@@ -57,6 +56,25 @@ final class Plugin
             . esc_html__('needs the Taxonomy Modeller with configuration tabs (0.1.27 or later).', 'taxapijlcpcb') . '</p></div>';
     }
 
+    /**
+     * Validates and sanitizes the key fields; the modeller has checked capability and nonce (D-945).
+     *
+     * @param array<string, mixed> $post already unslashed
+     */
+    private static function saveKeys(array $post): bool
+    {
+        $source = new StoredCredentials();
+
+        if ($source->fromConstants() || ! StoredCredentials::vaultAvailable()) {
+            return true;
+        }
+
+        $field = static fn (string $name): string => is_string($post[$name] ?? null) ? trim(sanitize_text_field($post[$name])) : '';
+        $source->save($field('taxapijlcpcb_app_id'), $field('taxapijlcpcb_access_key'), $field('taxapijlcpcb_secret_key'));
+
+        return $source->credentials() !== null;
+    }
+
     public static function settingsUrl(): string
     {
         return admin_url('admin.php?page=taxmod-settings&tab=' . self::TAB);
@@ -71,10 +89,10 @@ final class Plugin
 
         check_admin_referer('taxapijlcpcb_check');
 
-        $credentials = (new ConstantCredentials())->credentials();
+        $credentials = (new StoredCredentials())->credentials();
 
         if ($credentials === null) {
-            $this->notice(false, __('The keys are missing in wp-config.php.', 'taxapijlcpcb'));
+            $this->notice(false, __('The keys are missing — enter and save them first, or define them in wp-config.php.', 'taxapijlcpcb'));
             $this->back();
         }
 

@@ -3,7 +3,7 @@
 JLCPCB connection for the [Taxonomy Modeller](https://github.com/sfambach/wp-taxonomy-modeler) (WordPress plugin),
 over the [JLC Open API](https://api.jlcpcb.com).
 
-**Status 0.0.1: step 1 only — the keys and a connection test. Nothing is fetched or written yet; not tested against JLC.**
+**Status 0.0.2: step 1 only — the keys and a connection test. Nothing is fetched or written yet; not tested against JLC.**
 The draft concept (German) lives with the modeller:
 [`docs/pakete/jlc/konzept.md`](https://github.com/sfambach/wp-taxonomy-modeler/blob/main/docs/pakete/jlc/konzept.md).
 It is meant to become the first source on the modeller's shared import interface
@@ -20,7 +20,9 @@ It is meant to become the first source on the modeller's shared import interface
 ## Setup (step 1)
 
 1. In the JLC API console (api.jlcpcb.com) the app exists and its service is started; create an API key for it.
-2. Put the three values into `wp-config.php` — never into a chat:
+2. Enter App ID, AccessKey and SecretKey on *Taxonomy Modeller → Configuration → JLCPCB*. The SecretKey is sealed in
+   the modeller's vault (D-951, needs the modeller 0.1.31 or later). Or define them in `wp-config.php`, which takes
+   precedence. Never post them in a chat:
 
    ```php
    define('TAXJLCPCB_APP_ID', '…');
@@ -32,7 +34,7 @@ It is meant to become the first source on the modeller's shared import interface
 3. *Taxonomy Modeller → Configuration → JLCPCB* → «Test connection». It requests the public detail of component
    C25804, a read that changes nothing. Success proves keys and signature.
 
-The plugin stores no key itself. A form with encrypted storage comes with the modeller's shared vault (D-951).
+Changing the salts in `wp-config.php` makes the stored SecretKey unreadable; the tab says so and asks for it again.
 The IP whitelist of the app may stay empty; if you fill it, add the outgoing IP of the web server.
 
 ## Development
