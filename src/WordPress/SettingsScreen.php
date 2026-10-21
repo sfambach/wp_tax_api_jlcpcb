@@ -169,7 +169,20 @@ final class SettingsScreen
                 . '</td><td>' . esc_html($money($item['price'] ?? null)) . '</td><td>' . esc_html(self::status($item['status'] ?? null)) . '</td></tr>';
         }
 
-        return $html . '</tbody></table>';
+        $html .= '</tbody></table>';
+        $fields = is_array($last['money'] ?? null) ? $last['money'] : [];
+
+        if ($fields !== []) {
+            $html .= '<details><summary>' . esc_html__('All money and currency fields JLC sent (without address)', 'taxapijlcpcb') . '</summary><table class="widefat striped" style="max-width:60em"><tbody>';
+
+            foreach ($fields as $path => $value) {
+                $html .= '<tr><td><code>' . esc_html((string) $path) . '</code></td><td>' . esc_html((string) $value) . '</td></tr>';
+            }
+
+            $html .= '</tbody></table></details>';
+        }
+
+        return $html;
     }
 
     private function enrichError(): string

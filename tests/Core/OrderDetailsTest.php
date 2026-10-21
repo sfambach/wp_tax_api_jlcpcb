@@ -36,6 +36,9 @@ final class OrderDetailsTest extends TestCase
         self::assertSame(496.44, round((float) $details->total(), 2));
         self::assertSame('2026-09-21', $details->orderDate());
         self::assertStringNotContainsString('Muster', serialize($details));
+        self::assertSame('422.17', $details->moneyFields['pcbOrderInfoDataList.0.pcbOrderFeeInfo.totalFee']);
+        self::assertSame('45', $details->moneyFields['tariffMoney']);
+        self::assertArrayHasKey('paymentMethod', $details->moneyFields);
     }
 
     public function testCompletesTheMailProposalAndAddsNoLine(): void

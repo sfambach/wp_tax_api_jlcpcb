@@ -17,6 +17,8 @@ final class OrderDetails
         public readonly ?string $trackingNumber,
         public readonly array $items,
         public readonly int $stencilOrders = 0,
+        /** @var array<string, string> money-like fields of the raw answer, for the probe */
+        public readonly array $moneyFields = [],
     ) {
     }
 
@@ -41,6 +43,7 @@ final class OrderDetails
             $text('expressNo'),
             $items,
             is_array($data['steelOrderAggInfoList'] ?? null) ? count($data['steelOrderAggInfoList']) : 0,
+            MoneyFields::from($data),
         );
     }
 
