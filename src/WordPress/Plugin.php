@@ -5,6 +5,7 @@ namespace TaxApiJlcpcb\WordPress;
 use TaxApiJlcpcb\Core\Api\ConnectionTest;
 use TaxApiJlcpcb\Core\Api\JlcApiException;
 use TaxApiJlcpcb\Core\Api\JlcClient;
+use TaxApiJlcpcb\Core\Orders\BatchList;
 
 /**
  * The boundary: the «JLCPCB» tab of the modeller's Configuration page (D-945) and the connection test. It wires
@@ -14,7 +15,7 @@ use TaxApiJlcpcb\Core\Api\JlcClient;
  */
 final class Plugin
 {
-    public const VERSION    = '0.0.2';
+    public const VERSION    = '0.0.3';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -27,6 +28,7 @@ final class Plugin
 
         add_filter('taxmod_config_tabs', $plugin->registerTab(...));
         add_action('admin_post_taxapijlcpcb_check', $plugin->handleCheck(...));
+        add_action('admin_post_taxapijlcpcb_list', $plugin->handleList(...));
         add_action('admin_notices', $plugin->noticeWithoutTabs(...));
     }
 
@@ -80,24 +82,49 @@ final class Plugin
         return admin_url('admin.php?page=taxmod-settings&tab=' . self::TAB);
     }
 
+    /** Days the probe list looks back. */
+    public const LIST_DAYS = 365;
+
+    /**
+     * Probe of step 2: lists the PCB and stencil batches of the last year, numbers only, and shows them in the tab.
+     * Nothing is written to the model.
+     */
+    public function handleList(): void
+    {
+        $client = $this->clientOrBack('taxapijlcpcb_list');
+
+        try {
+            $to = new \DateTimeImmutable('now');
+            $from = $to->modify('-' . self::LIST_DAYS . ' days');
+            $rows = [];
+
+            foreach ([BatchList::PCB, BatchList::STENCIL] as $type) {
+                foreach ((new BatchList($client))->between($type, $from, $to) as $batch) {
+                    $rows[$batch->number] = ($rows[$batch->number] ?? []) + $batch->ordersByType;
+                }
+            }
+
+            krsort($rows);
+            update_option('taxmod_jlcpcb_last_list', ['at' => current_time('mysql'), 'batches' => $rows], false);
+            $this->notice(true, sprintf(
+                /* translators: 1: number of batches, 2: days */
+                __('%1$d orders found in the last %2$d days.', 'taxapijlcpcb'),
+                count($rows),
+                self::LIST_DAYS
+            ));
+        } catch (JlcApiException $failure) {
+            $this->notice(false, __('Listing failed:', 'taxapijlcpcb') . ' ' . $failure->getMessage());
+        }
+
+        $this->back();
+    }
+
     /** CD-5: capability, nonce, then act; the result goes back as a notice. */
     public function handleCheck(): void
     {
-        if (! current_user_can(self::CAPABILITY)) {
-            wp_die(esc_html__('You may not test the JLCPCB connection.', 'taxapijlcpcb'), 403);
-        }
-
-        check_admin_referer('taxapijlcpcb_check');
-
-        $credentials = (new StoredCredentials())->credentials();
-
-        if ($credentials === null) {
-            $this->notice(false, __('The keys are missing — enter and save them first, or define them in wp-config.php.', 'taxapijlcpcb'));
-            $this->back();
-        }
+        $client = $this->clientOrBack('taxapijlcpcb_check');
 
         try {
-            $client = new JlcClient(new WpHttpTransport(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL);
             $component = (new ConnectionTest($client))->run();
             $this->notice(true, sprintf(
                 /* translators: 1: component code, 2: its model or description */
@@ -112,6 +139,23 @@ final class Plugin
         }
 
         $this->back();
+    }
+
+    private function clientOrBack(string $action): JlcClient
+    {
+        if (! current_user_can(self::CAPABILITY)) {
+            wp_die(esc_html__('You may not use the JLCPCB connection.', 'taxapijlcpcb'), 403);
+        }
+
+        check_admin_referer($action);
+        $credentials = (new StoredCredentials())->credentials();
+
+        if ($credentials === null) {
+            $this->notice(false, __('The keys are missing — enter and save them first, or define them in wp-config.php.', 'taxapijlcpcb'));
+            $this->back();
+        }
+
+        return new JlcClient(new WpHttpTransport(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL);
     }
 
     private function back(): never

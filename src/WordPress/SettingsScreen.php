@@ -56,6 +56,8 @@ final class SettingsScreen
             $html .= '<p><a class="button button-primary" href="' . esc_url($url) . '">' . esc_html__('Test connection', 'taxapijlcpcb') . '</a></p>';
         }
 
+        $html .= $this->orders($credentials !== null);
+
         return $html . '<p class="description">' . esc_html__('The IP whitelist of the app may stay empty. If you fill it, add the outgoing IP of this web server.', 'taxapijlcpcb') . '</p>';
     }
 
@@ -81,5 +83,45 @@ final class SettingsScreen
         return '<tr><th scope="row"><label for="taxapijlcpcb-' . esc_attr($name) . '">' . esc_html($label) . '</label></th>'
             . '<td><input type="' . esc_attr($type) . '" class="regular-text" autocomplete="off" id="taxapijlcpcb-' . esc_attr($name)
             . '" name="taxapijlcpcb_' . esc_attr($name) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($placeholder) . '"></td></tr>';
+    }
+
+    /** Step 2: the probe list of order numbers, read-only. */
+    private function orders(bool $ready): string
+    {
+        $html = '<h2>' . esc_html__('3 · Orders (probe, nothing is written)', 'taxapijlcpcb') . '</h2>';
+
+        if ($ready) {
+            $url = wp_nonce_url(admin_url('admin-post.php?action=taxapijlcpcb_list'), 'taxapijlcpcb_list');
+            $html .= '<p><a class="button" href="' . esc_url($url) . '">' . esc_html(sprintf(
+                /* translators: %d: days */
+                __('List orders of the last %d days', 'taxapijlcpcb'),
+                Plugin::LIST_DAYS
+            )) . '</a></p>';
+        }
+
+        $last = get_option('taxmod_jlcpcb_last_list');
+
+        if (! is_array($last) || ! is_array($last['batches'] ?? null)) {
+            return $html;
+        }
+
+        $html .= '<p>' . esc_html(sprintf(
+            /* translators: %s: date */
+            __('Listed %s:', 'taxapijlcpcb'),
+            (string) ($last['at'] ?? '')
+        )) . '</p><table class="widefat striped" style="max-width:40em"><thead><tr><th>'
+            . esc_html__('Order number', 'taxapijlcpcb') . '</th><th>' . esc_html__('Orders by type', 'taxapijlcpcb') . '</th></tr></thead><tbody>';
+
+        foreach ($last['batches'] as $number => $types) {
+            $parts = [];
+
+            foreach (is_array($types) ? $types : [] as $type => $count) {
+                $parts[] = (int) $count . ' × ' . (string) $type;
+            }
+
+            $html .= '<tr><td><code>' . esc_html((string) $number) . '</code></td><td>' . esc_html(implode(', ', $parts)) . '</td></tr>';
+        }
+
+        return $html . '</tbody></table>';
     }
 }

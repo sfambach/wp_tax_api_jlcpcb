@@ -3,7 +3,7 @@
 JLCPCB connection for the [Taxonomy Modeller](https://github.com/sfambach/wp-taxonomy-modeler) (WordPress plugin),
 over the [JLC Open API](https://api.jlcpcb.com).
 
-**Status 0.0.2: step 1 only — the keys and a connection test. Nothing is fetched or written yet; not tested against JLC.**
+**Status 0.0.3: keys, connection test (works on fambach.net) and a read-only probe that lists the order numbers of the last year. Nothing is written to the model yet.**
 The draft concept (German) lives with the modeller:
 [`docs/pakete/jlc/konzept.md`](https://github.com/sfambach/wp-taxonomy-modeler/blob/main/docs/pakete/jlc/konzept.md).
 It is meant to become the first source on the modeller's shared import interface
@@ -13,7 +13,7 @@ It is meant to become the first source on the modeller's shared import interface
 
 - JLCPCB mails (read by [Taxmod Mail](https://github.com/sfambach/wp_tax_mail)) name order number, boards and tracking, but no prices.
 - This module asks the JLC API for the details of such an order (costs, shipping, production state) and offers them as a completion of the proposal.
-- The PCB API has no order list, only details by order (batch) number — so the order number comes from the mail or is entered by hand.
+- The PCB API lists batches (order numbers `W…`) by creation time; prices and contents come from the detail call per batch.
 - Only picked data is written, through the modeller's `taxmod/write-data`. The shipping address is never stored.
 - It never orders anything.
 
