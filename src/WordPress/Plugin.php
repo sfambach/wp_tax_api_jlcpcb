@@ -6,6 +6,7 @@ use TaxApiJlcpcb\Core\Api\ConnectionTest;
 use TaxApiJlcpcb\Core\Api\JlcApiException;
 use TaxApiJlcpcb\Core\Api\JlcClient;
 use TaxApiJlcpcb\Core\Orders\BatchList;
+use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
 
 /**
  * The boundary: the «JLCPCB» tab of the modeller's Configuration page (D-945) and the connection test. It wires
@@ -15,7 +16,7 @@ use TaxApiJlcpcb\Core\Orders\BatchList;
  */
 final class Plugin
 {
-    public const VERSION    = '0.0.3';
+    public const VERSION    = '0.0.4';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -29,6 +30,12 @@ final class Plugin
         add_filter('taxmod_config_tabs', $plugin->registerTab(...));
         add_action('admin_post_taxapijlcpcb_check', $plugin->handleCheck(...));
         add_action('admin_post_taxapijlcpcb_list', $plugin->handleList(...));
+        add_action('admin_post_taxapijlcpcb_detail', $plugin->handleDetail(...));
+
+        // The inbox of the modeller 0.1.35 or later; without it the module only tests and lists.
+        if (interface_exists(\Taxmod\Core\Import\EnrichingSource::class)) {
+            add_filter('taxmod_import_sources', static fn (array $sources): array => [...$sources, new JlcpcbSource()]);
+        }
         add_action('admin_notices', $plugin->noticeWithoutTabs(...));
     }
 
@@ -114,6 +121,44 @@ final class Plugin
             ));
         } catch (JlcApiException $failure) {
             $this->notice(false, __('Listing failed:', 'taxapijlcpcb') . ' ' . $failure->getMessage());
+        }
+
+        $this->back();
+    }
+
+    /** Probe: the details of one listed batch, shown in the tab without the shipping address. */
+    public function handleDetail(): void
+    {
+        $batch = isset($_GET['batch']) && is_string($_GET['batch']) ? sanitize_text_field(wp_unslash($_GET['batch'])) : '';
+        $client = $this->clientOrBack('taxapijlcpcb_detail_' . $batch);
+
+        if (preg_match('/^W\d{14,16}$/', $batch) !== 1) {
+            $this->notice(false, __('Not a JLCPCB order number.', 'taxapijlcpcb'));
+            $this->back();
+        }
+
+        try {
+            $details = (new OrderDetailQuery($client))->batch($batch);
+            update_option('taxmod_jlcpcb_last_detail', [
+                'at'       => current_time('mysql'),
+                'batch'    => $details->batchNumber,
+                'shipping' => $details->shippingMethod,
+                'carriage' => $details->shippingCost,
+                'customs'  => $details->customsDuty,
+                'total'    => $details->total(),
+                'tracking' => $details->trackingNumber,
+                'stencils' => $details->stencilOrders,
+                'items'    => array_map(static fn ($item): array => [
+                    'file' => $item->gerberName, 'count' => $item->count, 'price' => $item->fee, 'status' => $item->status,
+                ], $details->items),
+            ], false);
+            $this->notice(true, sprintf(
+                /* translators: %s: order number */
+                __('Details of %s read.', 'taxapijlcpcb'),
+                $batch
+            ));
+        } catch (JlcApiException $failure) {
+            $this->notice(false, __('Reading the details failed:', 'taxapijlcpcb') . ' ' . $failure->getMessage());
         }
 
         $this->back();

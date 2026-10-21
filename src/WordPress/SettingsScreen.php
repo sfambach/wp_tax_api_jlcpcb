@@ -110,7 +110,7 @@ final class SettingsScreen
             __('Listed %s:', 'taxapijlcpcb'),
             (string) ($last['at'] ?? '')
         )) . '</p><table class="widefat striped" style="max-width:40em"><thead><tr><th>'
-            . esc_html__('Order number', 'taxapijlcpcb') . '</th><th>' . esc_html__('Orders by type', 'taxapijlcpcb') . '</th></tr></thead><tbody>';
+            . esc_html__('Order number', 'taxapijlcpcb') . '</th><th>' . esc_html__('Orders by type', 'taxapijlcpcb') . '</th><th></th></tr></thead><tbody>';
 
         foreach ($last['batches'] as $number => $types) {
             $parts = [];
@@ -119,9 +119,79 @@ final class SettingsScreen
                 $parts[] = (int) $count . ' × ' . (string) $type;
             }
 
-            $html .= '<tr><td><code>' . esc_html((string) $number) . '</code></td><td>' . esc_html(implode(', ', $parts)) . '</td></tr>';
+            $action = 'taxapijlcpcb_detail_' . (string) $number;
+            $url = wp_nonce_url(admin_url('admin-post.php?action=taxapijlcpcb_detail&batch=' . rawurlencode((string) $number)), $action);
+            $html .= '<tr><td><code>' . esc_html((string) $number) . '</code></td><td>' . esc_html(implode(', ', $parts))
+                . '</td><td><a href="' . esc_url($url) . '">' . esc_html__('Details', 'taxapijlcpcb') . '</a></td></tr>';
+        }
+
+        return $html . '</tbody></table>' . $this->detail() . $this->enrichError();
+    }
+
+    /** The last probed batch; the shipping address was never read. */
+    private function detail(): string
+    {
+        $last = get_option('taxmod_jlcpcb_last_detail');
+
+        if (! is_array($last) || ! is_array($last['items'] ?? null)) {
+            return '';
+        }
+
+        $money = static fn (mixed $v): string => is_numeric($v) ? number_format((float) $v, 2, '.', '') . ' USD' : '–';
+        $html = '<h3>' . esc_html(sprintf(
+            /* translators: 1: order number, 2: date */
+            __('Details of %1$s (read %2$s)', 'taxapijlcpcb'),
+            (string) ($last['batch'] ?? ''),
+            (string) ($last['at'] ?? '')
+        )) . '</h3><p>' . esc_html(sprintf(
+            /* translators: 1: shipping fee, 2: shipping method, 3: customs, 4: total, 5: tracking number */
+            __('Shipping %1$s (%2$s), customs %3$s, total %4$s, tracking %5$s', 'taxapijlcpcb'),
+            $money($last['carriage'] ?? null),
+            (string) ($last['shipping'] ?? '?'),
+            $money($last['customs'] ?? null),
+            $money($last['total'] ?? null),
+            (string) ($last['tracking'] ?? '–')
+        )) . (! empty($last['stencils']) ? ' ' . esc_html(sprintf(
+            /* translators: %d: number of stencil orders */
+            __('Plus %d stencil orders (not read yet).', 'taxapijlcpcb'),
+            (int) $last['stencils']
+        )) : '') . '</p><table class="widefat striped" style="max-width:60em"><thead><tr><th>' . esc_html__('File', 'taxapijlcpcb')
+            . '</th><th>' . esc_html__('Quantity', 'taxapijlcpcb') . '</th><th>' . esc_html__('Price', 'taxapijlcpcb')
+            . '</th><th>' . esc_html__('Status', 'taxapijlcpcb') . '</th></tr></thead><tbody>';
+
+        foreach ($last['items'] as $item) {
+            $item = is_array($item) ? $item : [];
+            $html .= '<tr><td>' . esc_html((string) ($item['file'] ?? '')) . '</td><td>' . esc_html((string) ($item['count'] ?? ''))
+                . '</td><td>' . esc_html($money($item['price'] ?? null)) . '</td><td>' . esc_html(self::status($item['status'] ?? null)) . '</td></tr>';
         }
 
         return $html . '</tbody></table>';
+    }
+
+    private function enrichError(): string
+    {
+        $error = get_option(JlcpcbSource::ERROR_OPTION);
+
+        return is_array($error) ? '<p class="description">' . esc_html(sprintf(
+            /* translators: 1: date, 2: order number, 3: error */
+            __('Last failed price completion %1$s for %2$s: %3$s', 'taxapijlcpcb'),
+            (string) ($error['at'] ?? ''),
+            (string) ($error['order'] ?? ''),
+            (string) ($error['message'] ?? '')
+        )) . '</p>' : '';
+    }
+
+    /** Codes of JLC's first version of the call; V2 names none, so an unknown code shows as its number. */
+    private static function status(mixed $code): string
+    {
+        return match (is_numeric($code) ? (int) $code : -1) {
+            0 => __('cancelled', 'taxapijlcpcb'),
+            1 => __('pending review', 'taxapijlcpcb'),
+            2 => __('awaiting confirmation', 'taxapijlcpcb'),
+            3 => __('confirmed', 'taxapijlcpcb'),
+            4 => __('in production', 'taxapijlcpcb'),
+            5 => __('shipped', 'taxapijlcpcb'),
+            default => is_numeric($code) ? (string) $code : '',
+        };
     }
 }

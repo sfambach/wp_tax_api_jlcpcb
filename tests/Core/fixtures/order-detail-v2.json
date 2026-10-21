@@ -1,0 +1,18 @@
+{
+    "code": 200,
+    "message": null,
+    "data": {
+        "orderAddress": {"firstName": "Max", "lastName": "Muster", "streetAddress": "Musterweg 1", "city": "1231", "province": "1231", "cellOrMobileNumber": "0123", "linkAddress": null},
+        "shippingMethod": "dhl",
+        "paymentMethod": null,
+        "tariffMoney": 45,
+        "totalCarriageMoney": 29.27,
+        "expressNo": "1234567890",
+        "pcbOrderInfoDataList": [
+            {"orderCode": "Y3423", "batchNum": "W2026092101021667", "stencilCounts": 5, "gerberName": "ESP32_BT2PS2_SMD_Y3423", "orderStatus": 2, "pcbOrderFeeInfo": {"totalFee": 422.17, "projectFee": 126}},
+            {"orderCode": "Y3424", "batchNum": "W2026092101021667", "stencilCounts": 5, "gerberName": "Old_Try_Y3424", "orderStatus": 0, "pcbOrderFeeInfo": {"totalFee": 2}}
+        ],
+        "steelOrderAggInfoList": []
+    },
+    "successful": true
+}

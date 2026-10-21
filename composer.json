@@ -1,6 +1,6 @@
 {
     "name": "sfambach/wp-tax-api-jlcpcb",
-    "description": "Taxmod JLCPCB — completes JLCPCB orders in the Taxonomy Modeller with data from the JLC Open API.",
+    "description": "Taxmod JLCPCB \u2014 completes JLCPCB orders in the Taxonomy Modeller with data from the JLC Open API.",
     "type": "wordpress-plugin",
     "license": "proprietary",
     "require": {
@@ -18,7 +18,8 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^10"
+        "phpunit/phpunit": "^10",
+        "sfambach/wp-taxonomy-modeler": "dev-main"
     },
     "config": {
         "optimize-autoloader": true,
@@ -26,5 +27,11 @@
     },
     "scripts": {
         "test": "phpunit"
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/sfambach/wp-taxonomy-modeler"
+        }
+    ]
 }
