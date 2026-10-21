@@ -21,7 +21,7 @@ final class OrderDetails
         public readonly array $items,
         public readonly int $stencilOrders = 0,
         /** @var array<string, string> money-like fields of the raw answer, for the probe */
-        public readonly array $moneyFields = [],
+        public readonly array $probeFields = [],
     ) {
     }
 
@@ -46,7 +46,7 @@ final class OrderDetails
             $text('expressNo'),
             $items,
             is_array($data['steelOrderAggInfoList'] ?? null) ? count($data['steelOrderAggInfoList']) : 0,
-            MoneyFields::from($data),
+            ProbeFields::from($data),
         );
     }
 

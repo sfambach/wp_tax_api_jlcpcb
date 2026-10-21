@@ -37,9 +37,9 @@ final class OrderDetailsTest extends TestCase
         self::assertSame('2026-09-20', $details->orderDate(new \DateTimeZone('Europe/Berlin')));
         self::assertSame('2026-09-21', $details->orderDate(new \DateTimeZone('Asia/Shanghai')));
         self::assertStringNotContainsString('Muster', serialize($details));
-        self::assertSame('422.17', $details->moneyFields['pcbOrderInfoDataList.0.pcbOrderFeeInfo.totalFee']);
-        self::assertSame('45', $details->moneyFields['tariffMoney']);
-        self::assertArrayHasKey('paymentMethod', $details->moneyFields);
+        self::assertSame('422.17', $details->probeFields['pcbOrderInfoDataList.0.pcbOrderFeeInfo.totalFee']);
+        self::assertSame('45', $details->probeFields['tariffMoney']);
+        self::assertArrayHasKey('paymentMethod', $details->probeFields);
     }
 
     public function testNoTotalWhileStencilOrdersAreUnread(): void

@@ -3,12 +3,12 @@
 namespace TaxApiJlcpcb\Core\Orders;
 
 /**
- * For the probe only: every field of a raw answer whose name speaks of money or currency, with its path — to see what
- * JLC really sends beside the documented fields. The address branch is skipped as a whole.
+ * For the probe only: every field of a raw answer whose name speaks of money, currency, a file or an image, with its
+ * path — to see what JLC really sends beside the documented fields. The address branch is skipped as a whole.
  */
-final class MoneyFields
+final class ProbeFields
 {
-    private const NAME = '/money|fee|price|cost|currenc|rate|amount|total|pay/i';
+    private const NAME = '/money|fee|price|cost|currenc|rate|amount|total|pay|url|img|image|pic|photo|thumb|file|path/i';
 
     /**
      * @param array<array-key, mixed> $data the `data` member of the answer

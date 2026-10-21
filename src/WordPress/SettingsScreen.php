@@ -173,7 +173,7 @@ final class SettingsScreen
         $fields = is_array($last['money'] ?? null) ? $last['money'] : [];
 
         if ($fields !== []) {
-            $html .= '<details><summary>' . esc_html__('All money and currency fields JLC sent (without address)', 'taxapijlcpcb') . '</summary><table class="widefat striped" style="max-width:60em"><tbody>';
+            $html .= '<details><summary>' . esc_html__('All money, currency, file and image fields JLC sent (without address)', 'taxapijlcpcb') . '</summary><table class="widefat striped" style="max-width:60em"><tbody>';
 
             foreach ($fields as $path => $value) {
                 $html .= '<tr><td><code>' . esc_html((string) $path) . '</code></td><td>' . esc_html((string) $value) . '</td></tr>';

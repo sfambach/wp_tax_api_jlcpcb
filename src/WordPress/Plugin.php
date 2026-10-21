@@ -16,7 +16,7 @@ use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.2';
+    public const VERSION    = '0.1.3';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -173,7 +173,7 @@ final class Plugin
                 'total'    => $details->total(),
                 'tracking' => $details->trackingNumber,
                 'stencils' => $details->stencilOrders,
-                'money'    => $details->moneyFields,
+                'money'    => $details->probeFields,
                 'items'    => array_map(static fn ($item): array => [
                     'file' => $item->gerberName, 'count' => $item->count, 'price' => $item->fee, 'status' => $item->status,
                 ], $details->items),
