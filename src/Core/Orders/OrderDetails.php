@@ -53,6 +53,11 @@ final class OrderDetails
     /** Fees of the orders not cancelled, plus shipping and customs; null when no fee is known. */
     public function total(): ?float
     {
+        // Stencil orders are counted but not read yet, so a sum of the PCB fees alone would be too low.
+        if ($this->stencilOrders > 0) {
+            return null;
+        }
+
         $fees = array_filter(array_map(static fn (OrderItem $i): ?float => $i->isCancelled() ? null : $i->fee, $this->items), static fn (?float $f): bool => $f !== null);
 
         return $fees === [] ? null : array_sum($fees) + ($this->shippingCost ?? 0.0) + ($this->customsDuty ?? 0.0);

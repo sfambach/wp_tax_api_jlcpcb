@@ -42,6 +42,16 @@ final class OrderDetailsTest extends TestCase
         self::assertArrayHasKey('paymentMethod', $details->moneyFields);
     }
 
+    public function testNoTotalWhileStencilOrdersAreUnread(): void
+    {
+        $data = json_decode((string) file_get_contents(__DIR__ . '/fixtures/order-detail-v2.json'), true);
+        $data['data']['steelOrderAggInfoList'] = [['stencilFee' => 14.6]];
+        $details = OrderDetails::fromData('W2026092101021667', $data['data']);
+
+        self::assertSame(1, $details->stencilOrders);
+        self::assertNull($details->total());
+    }
+
     public function testCompletesTheMailProposalAndAddsNoLine(): void
     {
         $mail = new OrderProposal('JLCPCB', 'W2026092101021667', ProposalKind::Ordered,
