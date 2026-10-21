@@ -2,6 +2,7 @@
 
 namespace TaxApiJlcpcb\Core\Enrich;
 
+use DateTimeZone;
 use Taxmod\Core\Import\OrderProposal;
 use Taxmod\Core\Import\ProposalLine;
 use TaxApiJlcpcb\Core\Orders\OrderDetails;
@@ -20,6 +21,11 @@ use TaxApiJlcpcb\Core\Orders\OrderItem;
 final class PriceCompletion
 {
     public const CURRENCY = 'USD';
+
+    /** @param DateTimeZone $zone the site's zone, for the order date */
+    public function __construct(private readonly DateTimeZone $zone = new DateTimeZone('Europe/Berlin'))
+    {
+    }
 
     public function complete(OrderProposal $proposal, OrderDetails $details): ?OrderProposal
     {
@@ -47,7 +53,7 @@ final class PriceCompletion
 
         $shipping = $proposal->shippingCost ?? self::money($details->shippingCost);
         $total = $proposal->total ?? self::money($details->total());
-        $date = $proposal->orderDate ?? $details->orderDate();
+        $date = $proposal->orderDate ?? $details->orderDate($this->zone);
         $tracking = $proposal->trackingNumbers === [] && $details->trackingNumber !== null ? [$details->trackingNumber] : $proposal->trackingNumbers;
         $changed = $changed || $shipping !== $proposal->shippingCost || $total !== $proposal->total || $date !== $proposal->orderDate
             || $tracking !== $proposal->trackingNumbers;

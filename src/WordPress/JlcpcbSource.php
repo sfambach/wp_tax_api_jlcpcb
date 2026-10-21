@@ -47,7 +47,7 @@ final class JlcpcbSource implements EnrichingSource
             $client = new JlcClient(new WpHttpTransport(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL);
             $details = (new OrderDetailQuery($client))->batch(trim($proposal->orderNumber));
 
-            return (new PriceCompletion())->complete($proposal, $details);
+            return (new PriceCompletion(wp_timezone()))->complete($proposal, $details);
         } catch (JlcApiException $failure) {
             update_option(self::ERROR_OPTION, ['at' => current_time('mysql'), 'order' => $proposal->orderNumber, 'message' => $failure->getMessage()], false);
 

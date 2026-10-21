@@ -2,6 +2,9 @@
 
 namespace TaxApiJlcpcb\Core\Orders;
 
+use DateTimeImmutable;
+use DateTimeZone;
+
 /**
  * What JLC says about one batch: shipping method and fee, customs duty, tracking number and the PCB orders (USD).
  * The address of the answer — name, street, phone — is deliberately not read: it is never stored.
@@ -55,9 +58,19 @@ final class OrderDetails
         return $fees === [] ? null : array_sum($fees) + ($this->shippingCost ?? 0.0) + ($this->customsDuty ?? 0.0);
     }
 
-    /** The batch number starts with its creation date: `W` + yyyyMMdd… (seen in every example). */
-    public function orderDate(): ?string
+    /**
+     * The batch number starts with its creation time in China Standard Time: `W` + yyyyMMddHHmm… (seen in every
+     * example). JLC's website shows the same moment in the viewer's zone — W2026092101021667 is «2026-09-20 19:02» in
+     * Germany — so the date is taken in the zone the caller names.
+     */
+    public function orderDate(DateTimeZone $zone): ?string
     {
-        return preg_match('/^W(\d{4})(\d{2})(\d{2})/', $this->batchNumber, $m) === 1 ? sprintf('%s-%s-%s', $m[1], $m[2], $m[3]) : null;
+        if (preg_match('/^W(\d{12})/', $this->batchNumber, $m) !== 1) {
+            return null;
+        }
+
+        $moment = DateTimeImmutable::createFromFormat('YmdHi', $m[1], new DateTimeZone('Asia/Shanghai'));
+
+        return $moment === false ? null : $moment->setTimezone($zone)->format('Y-m-d');
     }
 }

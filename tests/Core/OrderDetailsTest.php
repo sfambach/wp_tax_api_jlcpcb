@@ -34,7 +34,8 @@ final class OrderDetailsTest extends TestCase
         self::assertSame([29.27, 45.0, '1234567890'], [$details->shippingCost, $details->customsDuty, $details->trackingNumber]);
         self::assertCount(2, $details->items);
         self::assertSame(496.44, round((float) $details->total(), 2));
-        self::assertSame('2026-09-21', $details->orderDate());
+        self::assertSame('2026-09-20', $details->orderDate(new \DateTimeZone('Europe/Berlin')));
+        self::assertSame('2026-09-21', $details->orderDate(new \DateTimeZone('Asia/Shanghai')));
         self::assertStringNotContainsString('Muster', serialize($details));
         self::assertSame('422.17', $details->moneyFields['pcbOrderInfoDataList.0.pcbOrderFeeInfo.totalFee']);
         self::assertSame('45', $details->moneyFields['tariffMoney']);
@@ -53,7 +54,7 @@ final class OrderDetailsTest extends TestCase
         self::assertSame('USD', $done->currency);
         self::assertSame('29.27', $done->shippingCost);
         self::assertSame('496.44', $done->total);
-        self::assertSame('2026-09-21', $done->orderDate);
+        self::assertSame('2026-09-20', $done->orderDate);
         self::assertSame(['1234567890'], $done->trackingNumbers);
         self::assertCount(2, $done->lines);
         self::assertSame('84.434', $done->lines[0]->unitPrice);
