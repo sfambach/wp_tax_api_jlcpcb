@@ -16,7 +16,7 @@ use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.3';
+    public const VERSION    = '0.1.4';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -50,14 +50,6 @@ final class Plugin
         add_action('admin_notices', $plugin->noticeWithoutTabs(...));
     }
 
-    /** The modeller's developer mode shows the module version in the tab title. */
-    private static function inDeveloperMode(): bool
-    {
-        return class_exists(\Taxmod\WordPress\Admin\SettingsScreen::class)
-            && method_exists(\Taxmod\WordPress\Admin\SettingsScreen::class, 'inDeveloperMode')
-            && \Taxmod\WordPress\Admin\SettingsScreen::inDeveloperMode();
-    }
-
     private static function hasInbox(): bool
     {
         return interface_exists(\Taxmod\Core\Import\FetchingSource::class) && interface_exists(\Taxmod\Core\Import\EnrichingSource::class);
@@ -70,10 +62,11 @@ final class Plugin
     public function registerTab(array $tabs): array
     {
         $tabs[self::TAB] = [
-            'title'  => __('JLCPCB', 'taxapijlcpcb') . (self::inDeveloperMode() ? ' ' . self::VERSION : ''),
-            'render' => fn (): string => (new SettingsScreen(new StoredCredentials()))->fields($this->takeNotices()),
-            'save'   => static fn (array $post): bool => self::saveKeys($post),
-            'guide'  => static fn (): string => SettingsScreen::guide(),
+            'title'   => __('JLCPCB', 'taxapijlcpcb'),
+            'version' => self::VERSION,
+            'render'  => fn (): string => (new SettingsScreen(new StoredCredentials()))->fields($this->takeNotices()),
+            'save'    => static fn (array $post): bool => self::saveKeys($post),
+            'guide'   => static fn (): string => SettingsScreen::guide(),
         ];
 
         return $tabs;

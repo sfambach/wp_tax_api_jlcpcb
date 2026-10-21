@@ -15,11 +15,8 @@ final class SettingsScreen
     /** @param list<array{ok: bool, text: string}> $notices */
     public function fields(array $notices): string
     {
-        $html = '<p class="description">' . esc_html(sprintf(
-            /* translators: %s: plugin version */
-            __('Taxmod JLCPCB %s', 'taxapijlcpcb'),
-            Plugin::VERSION
-        )) . '</p>';
+        // The version is drawn by the modeller under the tab bar (D-968).
+        $html = '';
 
         foreach ($notices as $notice) {
             $html .= '<div class="notice ' . ($notice['ok'] ? 'notice-success' : 'notice-error') . ' inline"><p>'
