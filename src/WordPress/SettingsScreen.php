@@ -211,4 +211,20 @@ final class SettingsScreen
             default => is_numeric($code) ? (string) $code : '',
         };
     }
+
+    /** The steps of the «How to connect» box the modeller draws beside the tab (D-963), escaped. */
+    public static function guide(): string
+    {
+        $steps = [
+            __('Open the JLC API console (api.jlcpcb.com) with your JLCPCB account. The app must exist and its service must be started.', 'taxapijlcpcb'),
+            __('Create an API key for the app. You get three values: App ID, AccessKey and SecretKey. Never post them in a chat.', 'taxapijlcpcb'),
+            __('Enter the three values in this tab and save. The SecretKey is stored encrypted and is not shown again. Constants in wp-config.php (TAXJLCPCB_APP_ID, TAXJLCPCB_ACCESS_KEY, TAXJLCPCB_SECRET_KEY) take precedence.', 'taxapijlcpcb'),
+            __('Click «Test connection». It reads one public component and changes nothing.', 'taxapijlcpcb'),
+            __('Click «List orders of the last 365 days» to see the order numbers of the last year, and «Details» for the amounts of one order.', 'taxapijlcpcb'),
+            __('JLCPCB orders arriving in the inbox (for example from the mail import) get their empty prices, shipping, total, date and tracking number filled in. Amounts stay in USD.', 'taxapijlcpcb'),
+        ];
+
+        return '<ol>' . implode('', array_map(static fn (string $step): string => '<li>' . esc_html($step) . '</li>', $steps)) . '</ol>'
+            . '<p>' . esc_html__('The IP whitelist of the app may stay empty. If you fill it, add the outgoing IP of the web server.', 'taxapijlcpcb') . '</p>';
+    }
 }

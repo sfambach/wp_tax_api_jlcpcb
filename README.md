@@ -3,7 +3,7 @@
 JLCPCB connection for the [Taxonomy Modeller](https://github.com/sfambach/wp-taxonomy-modeler) (WordPress plugin),
 over the [JLC Open API](https://api.jlcpcb.com).
 
-**Status 0.0.8: keys, connection test (works on fambach.net), a read-only probe that lists the order numbers of the last year and shows the details of one, and price completion of JLCPCB proposals in the modeller's inbox (modeller 0.1.35 or later). Completion is not yet tested against JLC. Amounts stay in USD; conversion to euros belongs to the modeller. A batch with stencil orders gets no total until stencils are read.**
+**Status 0.0.9: keys, a «How to connect» box beside the tab (modeller after 0.1.40), connection test (works on fambach.net), a read-only probe that lists the order numbers of the last year and shows the details of one, and price completion of JLCPCB proposals in the modeller's inbox (modeller 0.1.35 or later). Completion is not yet tested against JLC. Amounts stay in USD; conversion to euros belongs to the modeller. A batch with stencil orders gets no total until stencils are read.**
 The draft concept (German) lives with the modeller:
 [`docs/pakete/jlc/konzept.md`](https://github.com/sfambach/wp-taxonomy-modeler/blob/main/docs/pakete/jlc/konzept.md).
 It is meant to become the first source on the modeller's shared import interface

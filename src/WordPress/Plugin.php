@@ -16,7 +16,7 @@ use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
  */
 final class Plugin
 {
-    public const VERSION    = '0.0.8';
+    public const VERSION    = '0.0.9';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -49,6 +49,7 @@ final class Plugin
             'title'  => __('JLCPCB', 'taxapijlcpcb'),
             'render' => fn (): string => (new SettingsScreen(new StoredCredentials()))->fields($this->takeNotices()),
             'save'   => static fn (array $post): bool => self::saveKeys($post),
+            'guide'  => static fn (): string => SettingsScreen::guide(),
         ];
 
         return $tabs;
