@@ -40,6 +40,8 @@ final class OrderDetailsTest extends TestCase
         self::assertSame('422.17', $details->probeFields['pcbOrderInfoDataList.0.pcbOrderFeeInfo.totalFee']);
         self::assertSame('45', $details->probeFields['tariffMoney']);
         self::assertArrayHasKey('paymentMethod', $details->probeFields);
+        self::assertSame('dhl', $details->probeFields['shippingMethod'] ?? null);
+        self::assertArrayNotHasKey('orderAddress.city', $details->probeFields);
     }
 
     public function testNoTotalWhileStencilOrdersAreUnread(): void

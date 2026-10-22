@@ -3,13 +3,11 @@
 namespace TaxApiJlcpcb\Core\Orders;
 
 /**
- * For the probe only: every field of a raw answer whose name speaks of money, currency, a file or an image, with its
- * path — to see what JLC really sends beside the documented fields. The address branch is skipped as a whole.
+ * For the probe only: every scalar field of a raw answer with its path — to see what JLC really sends beside the
+ * documented fields (money, board specs, build time, ship date). The address branch is skipped as a whole.
  */
 final class ProbeFields
 {
-    private const NAME = '/money|fee|price|cost|currenc|rate|amount|total|pay|url|img|image|pic|photo|thumb|file|path/i';
-
     /**
      * @param array<array-key, mixed> $data the `data` member of the answer
      * @return array<string, string> path => value
@@ -27,7 +25,7 @@ final class ProbeFields
 
             if (is_array($value)) {
                 $found += self::from($value, $path);
-            } elseif (is_string($key) && preg_match(self::NAME, $key) === 1 && (is_scalar($value) || $value === null)) {
+            } elseif (is_scalar($value) || $value === null) {
                 $found[$path] = $value === null ? 'null' : (string) $value;
             }
         }
