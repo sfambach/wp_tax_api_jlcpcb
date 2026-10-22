@@ -52,10 +52,12 @@ final class PriceCompletion
         }
 
         $shipping = $proposal->shippingCost ?? self::money($details->shippingCost);
+        // Customs go to `fees` so the modeller spreads them into the landed unit price with the shipping (D-933).
+        $fees = $proposal->fees ?? self::money($details->customsDuty);
         $total = $proposal->total ?? self::money($details->total());
         $date = $proposal->orderDate ?? $details->orderDate($this->zone);
         $tracking = $proposal->trackingNumbers === [] && $details->trackingNumber !== null ? [$details->trackingNumber] : $proposal->trackingNumbers;
-        $changed = $changed || $shipping !== $proposal->shippingCost || $total !== $proposal->total || $date !== $proposal->orderDate
+        $changed = $changed || $shipping !== $proposal->shippingCost || $fees !== $proposal->fees || $total !== $proposal->total || $date !== $proposal->orderDate
             || $tracking !== $proposal->trackingNumbers;
 
         if (! $changed) {
@@ -65,6 +67,7 @@ final class PriceCompletion
         $row = $proposal->toArray();
         $row['lines'] = array_map(static fn (ProposalLine $l): array => $l->toArray(), $lines);
         $row['shipping_cost'] = $shipping;
+        $row['fees'] = $fees;
         $row['total'] = $total;
         $row['order_date'] = $date;
         $row['tracking'] = $tracking;

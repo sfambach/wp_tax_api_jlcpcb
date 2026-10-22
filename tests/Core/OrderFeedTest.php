@@ -42,6 +42,7 @@ final class OrderFeedTest extends TestCase
         self::assertSame(['JLCPCB', 'W2026092101021667', ProposalKind::Ordered, '2026-09-20', 'USD', 'jlcpcb', 'W2026092101021667'],
             [$proposal->platform, $proposal->orderNumber, $proposal->kind, $proposal->orderDate, $proposal->currency, $proposal->source, $proposal->externalId]);
         self::assertSame('496.44', $proposal->total);
+        self::assertSame('45', $proposal->fees);
         self::assertSame(['1234567890'], $proposal->trackingNumbers);
         self::assertStringStartsWith('Leiterplatte ', $proposal->lines[0]->title);
         self::assertNotNull($proposal->lines[0]->unitPrice);

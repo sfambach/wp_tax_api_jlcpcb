@@ -84,6 +84,8 @@ final class OrderFeed
             self::money($details->shippingCost),
             self::money($details->total()),
             counterparty: 'JLCPCB',
+            // Customs, spread with the shipping into the landed unit price by the modeller (D-933).
+            fees: self::money($details->customsDuty),
             trackingNumbers: $details->trackingNumber === null ? [] : [$details->trackingNumber],
             source: self::SOURCE,
             externalId: $details->batchNumber,

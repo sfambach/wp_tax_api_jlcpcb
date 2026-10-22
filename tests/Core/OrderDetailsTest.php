@@ -65,6 +65,7 @@ final class OrderDetailsTest extends TestCase
         self::assertNotNull($done);
         self::assertSame('USD', $done->currency);
         self::assertSame('29.27', $done->shippingCost);
+        self::assertSame('45', $done->fees);
         self::assertSame('496.44', $done->total);
         self::assertSame('2026-09-20', $done->orderDate);
         self::assertSame(['1234567890'], $done->trackingNumbers);
@@ -77,7 +78,7 @@ final class OrderDetailsTest extends TestCase
     public function testNothingToAddGivesNull(): void
     {
         $priced = new OrderProposal('JLCPCB', 'W2026092101021667', ProposalKind::Ordered, '2026-09-21', 'USD',
-            [new ProposalLine('Leiterplatte ESP32_BT2PS2_SMD', 5.0, '84.434')], '29.27', '496.44', trackingNumbers: ['1234567890']);
+            [new ProposalLine('Leiterplatte ESP32_BT2PS2_SMD', 5.0, '84.434')], '29.27', '496.44', fees: '45', trackingNumbers: ['1234567890']);
 
         self::assertNull((new PriceCompletion())->complete($priced, self::details()));
     }
@@ -85,7 +86,7 @@ final class OrderDetailsTest extends TestCase
     public function testCancelledOrderIsNotMatched(): void
     {
         $mail = new OrderProposal('JLCPCB', 'W2026092101021667', ProposalKind::Ordered, '2026-09-21', 'USD',
-            [new ProposalLine('Leiterplatte Old Try', 5.0)], '1', '1', trackingNumbers: ['x']);
+            [new ProposalLine('Leiterplatte Old Try', 5.0)], '1', '1', fees: '1', trackingNumbers: ['x']);
 
         self::assertNull((new PriceCompletion())->complete($mail, self::details()));
     }
