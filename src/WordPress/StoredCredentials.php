@@ -59,6 +59,12 @@ final class StoredCredentials implements CredentialSource
     }
 
     /** true when a secret is stored but no longer opens — the salts in wp-config.php changed */
+    /** Deletes the stored keys; keys in wp-config.php stay, they are not this page's to delete. */
+    public function forget(): void
+    {
+        delete_option(self::OPTION);
+    }
+
     public function secretBroken(): bool
     {
         $stored = self::option();

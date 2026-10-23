@@ -3,8 +3,8 @@
 namespace TaxApiJlcpcb\WordPress;
 
 /**
- * The «JLCPCB» tab body: the keys, the connection test and its last result. Returns its HTML (CD-8). The modeller
- * wraps it in its own form, so the fields carry no form tag and the test is a nonce link. The secret is never shown.
+ * The «JLCPCB» tab parts: the key fields (Access) and the probes (Settings). Returns their HTML (CD-8). The modeller
+ * wraps them in its own form and draws Save, Test connection, Delete and the fetch interval (D-981). The secret is never shown.
  */
 final class SettingsScreen
 {
@@ -12,35 +12,26 @@ final class SettingsScreen
     {
     }
 
-    /** @param list<array{ok: bool, text: string}> $notices */
-    public function fields(array $notices): string
+    /** The «Access» part (D-981): only the key fields; the modeller draws Save, Test connection and Delete beneath. */
+    public function credentials(): string
     {
-        // The version is drawn by the modeller under the tab bar (D-968).
-        $html = '';
-
-        foreach ($notices as $notice) {
-            $html .= '<div class="notice ' . ($notice['ok'] ? 'notice-success' : 'notice-error') . ' inline"><p>'
-                . esc_html($notice['text']) . '</p></div>';
-        }
-
-        $html .= '<h2>' . esc_html__('1 · App keys', 'taxapijlcpcb') . '</h2>';
         $credentials = $this->source->credentials();
 
         if ($this->source->fromConstants()) {
-            $html .= '<p>' . esc_html(sprintf(
+            return '<p>' . esc_html(sprintf(
                 /* translators: 1: app id, 2: access key */
                 __('Set in wp-config.php: App ID %1$s, AccessKey %2$s, SecretKey set. These take precedence over the fields.', 'taxapijlcpcb'),
                 $credentials?->appId ?? '',
                 $credentials?->accessKey ?? ''
             )) . '</p>';
-        } elseif (StoredCredentials::vaultAvailable()) {
-            $html .= $this->keyFields();
-        } else {
-            $html .= '<p>' . esc_html__('This Taxonomy Modeller has no vault yet (0.1.31 or later), so the keys can only be defined in wp-config.php:', 'taxapijlcpcb') . '</p>'
+        }
+
+        if (! StoredCredentials::vaultAvailable()) {
+            return '<p>' . esc_html__('This Taxonomy Modeller has no vault yet (0.1.31 or later), so the keys can only be defined in wp-config.php:', 'taxapijlcpcb') . '</p>'
                 . '<pre>' . esc_html("define('TAXJLCPCB_APP_ID', '…');\ndefine('TAXJLCPCB_ACCESS_KEY', '…');\ndefine('TAXJLCPCB_SECRET_KEY', '…');") . '</pre>';
         }
 
-        $html .= '<h2>' . esc_html__('2 · Connection', 'taxapijlcpcb') . '</h2>';
+        $html = $this->keyFields();
         $last = get_option('taxmod_jlcpcb_last_check');
 
         if (is_array($last) && isset($last['at'])) {
@@ -52,15 +43,25 @@ final class SettingsScreen
             )) . '</p>';
         }
 
-        if ($credentials !== null) {
-            $url = wp_nonce_url(admin_url('admin-post.php?action=taxapijlcpcb_check'), 'taxapijlcpcb_check');
-            $html .= '<p><a class="button button-primary" href="' . esc_url($url) . '">' . esc_html__('Test connection', 'taxapijlcpcb') . '</a></p>';
+        return $html;
+    }
+
+    /**
+     * The «Settings» part (D-981): the probes and the last enrichment error; access and fetch interval are drawn by the modeller.
+     *
+     * @param list<array{ok: bool, text: string}> $notices
+     */
+    public function fields(array $notices): string
+    {
+        // The version is drawn by the modeller under the tab bar (D-968).
+        $html = '';
+
+        foreach ($notices as $notice) {
+            $html .= '<div class="notice ' . ($notice['ok'] ? 'notice-success' : 'notice-error') . ' inline"><p>'
+                . esc_html($notice['text']) . '</p></div>';
         }
 
-        $html .= $this->schedule();
-        $html .= $this->orders($credentials !== null);
-
-        return $html . '<p class="description">' . esc_html__('The IP whitelist of the app may stay empty. If you fill it, add the outgoing IP of this web server.', 'taxapijlcpcb') . '</p>';
+        return $html . $this->orders($this->source->credentials() !== null);
     }
 
     /** The secret goes in, never out; an empty field keeps the stored one. */
@@ -87,22 +88,10 @@ final class SettingsScreen
             . '" name="taxapijlcpcb_' . esc_attr($name) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($placeholder) . '"></td></tr>';
     }
 
-    /** How often the inbox fetches; saved with the tab's button. */
-    private function schedule(): string
-    {
-        $html = '<p><label for="taxapijlcpcb-schedule">' . esc_html__('Fetch orders automatically', 'taxapijlcpcb') . '</label> <select id="taxapijlcpcb-schedule" name="taxapijlcpcb_schedule">';
-
-        foreach (FetchSchedule::choices() as $value => $label) {
-            $html .= '<option value="' . esc_attr($value) . '"' . selected(FetchSchedule::current(), $value, false) . '>' . esc_html($label) . '</option>';
-        }
-
-        return $html . '</select></p>';
-    }
-
     /** Step 2: the probe list of order numbers, read-only. */
     private function orders(bool $ready): string
     {
-        $html = '<h2>' . esc_html__('3 · Orders (probe, nothing is written)', 'taxapijlcpcb') . '</h2>';
+        $html = '<h2>' . esc_html__('Orders (probe, nothing is written)', 'taxapijlcpcb') . '</h2>';
 
         if ($ready) {
             $url = wp_nonce_url(admin_url('admin-post.php?action=taxapijlcpcb_list'), 'taxapijlcpcb_list');

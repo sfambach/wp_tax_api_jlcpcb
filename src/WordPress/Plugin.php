@@ -16,7 +16,7 @@ use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.7';
+    public const VERSION    = '0.1.8';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -28,7 +28,6 @@ final class Plugin
         $plugin = new self();
 
         add_filter('taxmod_config_tabs', $plugin->registerTab(...));
-        add_action('admin_post_taxapijlcpcb_check', $plugin->handleCheck(...));
         add_action('admin_post_taxapijlcpcb_list', $plugin->handleList(...));
         add_action('admin_post_taxapijlcpcb_detail', $plugin->handleDetail(...));
 
@@ -64,9 +63,14 @@ final class Plugin
         $tabs[self::TAB] = [
             'title'   => __('JLCPCB', 'taxapijlcpcb'),
             'version' => self::VERSION,
-            'render'  => fn (): string => (new SettingsScreen(new StoredCredentials()))->fields($this->takeNotices()),
-            'save'    => static fn (array $post): bool => self::saveKeys($post),
-            'guide'   => static fn (): string => SettingsScreen::guide(),
+            // D-981: the modeller orders the page (Access, Fetching, Settings) and draws Save, Test, Delete and the interval.
+            'source'      => self::TAB,
+            'credentials' => static fn (): string => (new SettingsScreen(new StoredCredentials()))->credentials(),
+            'test'        => static fn (): string => self::testConnection(),
+            'forget'      => static fn () => (new StoredCredentials())->forget(),
+            'render'      => fn (): string => (new SettingsScreen(new StoredCredentials()))->fields($this->takeNotices()),
+            'save'        => static fn (array $post): bool => self::saveKeys($post),
+            'guide'       => static fn (): string => SettingsScreen::guide(),
         ];
 
         return $tabs;
@@ -90,7 +94,6 @@ final class Plugin
      */
     private static function saveKeys(array $post): bool
     {
-        FetchSchedule::save(is_string($post['taxapijlcpcb_schedule'] ?? null) ? sanitize_key($post['taxapijlcpcb_schedule']) : FetchSchedule::DEFAULT);
         $source = new StoredCredentials();
 
         if ($source->fromConstants() || ! StoredCredentials::vaultAvailable()) {
@@ -184,26 +187,30 @@ final class Plugin
         $this->back();
     }
 
-    /** CD-5: capability, nonce, then act; the result goes back as a notice. */
-    public function handleCheck(): void
+    /** «Test connection» of the modeller (D-981), run after saving; capability and nonce are checked there. Returns one sentence. */
+    private static function testConnection(): string
     {
-        $client = $this->clientOrBack('taxapijlcpcb_check');
+        $credentials = (new StoredCredentials())->credentials();
+
+        if ($credentials === null) {
+            return __('The keys are missing — enter and save them first, or define them in wp-config.php.', 'taxapijlcpcb');
+        }
 
         try {
-            $component = (new ConnectionTest($client))->run();
-            $this->notice(true, sprintf(
+            $component = (new ConnectionTest(new JlcClient(new WpHttpTransport(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL)))->run();
+            update_option('taxmod_jlcpcb_last_check', ['ok' => true, 'at' => current_time('mysql'), 'message' => ''], false);
+
+            return sprintf(
                 /* translators: 1: component code, 2: its model or description */
                 __('Connection works: JLC answered the signed request for %1$s (%2$s).', 'taxapijlcpcb'),
                 ConnectionTest::PROBE_CODE,
                 $component
-            ));
-            update_option('taxmod_jlcpcb_last_check', ['ok' => true, 'at' => current_time('mysql'), 'message' => ''], false);
+            );
         } catch (JlcApiException $failure) {
-            $this->notice(false, __('Connection failed:', 'taxapijlcpcb') . ' ' . $failure->getMessage());
             update_option('taxmod_jlcpcb_last_check', ['ok' => false, 'at' => current_time('mysql'), 'message' => $failure->getMessage()], false);
-        }
 
-        $this->back();
+            return __('Connection failed:', 'taxapijlcpcb') . ' ' . $failure->getMessage();
+        }
     }
 
     private function clientOrBack(string $action): JlcClient

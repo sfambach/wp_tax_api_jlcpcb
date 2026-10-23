@@ -36,9 +36,13 @@ final class JlcpcbSource implements FetchingSource, EnrichingSource
         return __('JLCPCB', 'taxapijlcpcb');
     }
 
+    /**
+     * The default only: the modeller lets him choose per module (D-981). Once a day, JLC less often than eBay (his word
+     * 2026-10-23: «jlc brauchen wir nicht so oft wie ebay»); without keys nothing to fetch.
+     */
     public function interval(): int
     {
-        return FetchSchedule::seconds();
+        return self::client() === null ? 0 : DAY_IN_SECONDS;
     }
 
     public function fetch(?string $cursor): FetchBatch
