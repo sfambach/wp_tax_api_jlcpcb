@@ -16,7 +16,7 @@ use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.6';
+    public const VERSION    = '0.1.7';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -90,6 +90,7 @@ final class Plugin
      */
     private static function saveKeys(array $post): bool
     {
+        FetchSchedule::save(is_string($post['taxapijlcpcb_schedule'] ?? null) ? sanitize_key($post['taxapijlcpcb_schedule']) : FetchSchedule::DEFAULT);
         $source = new StoredCredentials();
 
         if ($source->fromConstants() || ! StoredCredentials::vaultAvailable()) {

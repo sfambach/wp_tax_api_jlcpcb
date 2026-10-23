@@ -25,8 +25,6 @@ final class JlcpcbSource implements FetchingSource, EnrichingSource
 {
     public const PLATFORM     = OrderFeed::PLATFORM;
     public const ERROR_OPTION = 'taxmod_jlcpcb_last_enrich_error';
-    /** Four runs a day: «zwei bis 4x täglich api» (D-962). */
-    public const INTERVAL = 6 * HOUR_IN_SECONDS;
 
     public function key(): string
     {
@@ -40,7 +38,7 @@ final class JlcpcbSource implements FetchingSource, EnrichingSource
 
     public function interval(): int
     {
-        return self::INTERVAL;
+        return FetchSchedule::seconds();
     }
 
     public function fetch(?string $cursor): FetchBatch

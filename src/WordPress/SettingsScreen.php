@@ -57,6 +57,7 @@ final class SettingsScreen
             $html .= '<p><a class="button button-primary" href="' . esc_url($url) . '">' . esc_html__('Test connection', 'taxapijlcpcb') . '</a></p>';
         }
 
+        $html .= $this->schedule();
         $html .= $this->orders($credentials !== null);
 
         return $html . '<p class="description">' . esc_html__('The IP whitelist of the app may stay empty. If you fill it, add the outgoing IP of this web server.', 'taxapijlcpcb') . '</p>';
@@ -84,6 +85,18 @@ final class SettingsScreen
         return '<tr><th scope="row"><label for="taxapijlcpcb-' . esc_attr($name) . '">' . esc_html($label) . '</label></th>'
             . '<td><input type="' . esc_attr($type) . '" class="regular-text" autocomplete="off" id="taxapijlcpcb-' . esc_attr($name)
             . '" name="taxapijlcpcb_' . esc_attr($name) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($placeholder) . '"></td></tr>';
+    }
+
+    /** How often the inbox fetches; saved with the tab's button. */
+    private function schedule(): string
+    {
+        $html = '<p><label for="taxapijlcpcb-schedule">' . esc_html__('Fetch orders automatically', 'taxapijlcpcb') . '</label> <select id="taxapijlcpcb-schedule" name="taxapijlcpcb_schedule">';
+
+        foreach (FetchSchedule::choices() as $value => $label) {
+            $html .= '<option value="' . esc_attr($value) . '"' . selected(FetchSchedule::current(), $value, false) . '>' . esc_html($label) . '</option>';
+        }
+
+        return $html . '</select></p>';
     }
 
     /** Step 2: the probe list of order numbers, read-only. */
