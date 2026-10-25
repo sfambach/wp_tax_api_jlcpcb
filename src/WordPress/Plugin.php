@@ -16,7 +16,7 @@ use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.8';
+    public const VERSION    = '0.1.9';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 

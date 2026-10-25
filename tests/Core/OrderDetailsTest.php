@@ -71,6 +71,7 @@ final class OrderDetailsTest extends TestCase
         self::assertSame(['1234567890'], $done->trackingNumbers);
         self::assertCount(2, $done->lines);
         self::assertSame('84.434', $done->lines[0]->unitPrice);
+        self::assertSame('Y3423', $done->lines[0]->articleNumber);
         self::assertNull($done->lines[1]->unitPrice);
         self::assertSame('mail', $done->source);
     }

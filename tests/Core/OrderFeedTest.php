@@ -46,6 +46,7 @@ final class OrderFeedTest extends TestCase
         self::assertSame(['1234567890'], $proposal->trackingNumbers);
         self::assertStringStartsWith('Leiterplatte ', $proposal->lines[0]->title);
         self::assertNotNull($proposal->lines[0]->unitPrice);
+        self::assertSame('Y3423', $proposal->lines[0]->articleNumber);
     }
 
     public function testBoardTitleReadsLikeTheMailImport(): void

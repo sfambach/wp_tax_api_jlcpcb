@@ -47,7 +47,7 @@ final class PriceCompletion
                 continue;
             }
 
-            $lines[] = new ProposalLine($line->title, $line->quantity ?? (float) $item->count, $unitPrice, $line->articleNumber);
+            $lines[] = new ProposalLine($line->title, $line->quantity ?? (float) $item->count, $unitPrice, $line->articleNumber ?? ($item->orderCode === '' ? null : $item->orderCode));
             $changed = true;
         }
 

@@ -72,6 +72,8 @@ final class OrderFeed
             BoardTitle::of($item->gerberName),
             $item->count === null ? null : (float) $item->count,
             $item->fee === null || $item->count === null || $item->count <= 0 ? null : self::money($item->fee / $item->count, 4),
+            // JLC's production code of the board (Y…), shown as the article number in the inbox.
+            $item->orderCode === '' ? null : $item->orderCode,
         ), $items);
 
         $proposal = new OrderProposal(
