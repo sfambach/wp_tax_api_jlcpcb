@@ -5,8 +5,10 @@ namespace TaxApiJlcpcb\WordPress;
 use TaxApiJlcpcb\Core\Api\ConnectionTest;
 use TaxApiJlcpcb\Core\Api\JlcApiException;
 use TaxApiJlcpcb\Core\Api\JlcClient;
+use TaxApiJlcpcb\Core\Mail\JlcpcbMailParser;
 use TaxApiJlcpcb\Core\Orders\BatchList;
 use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
+use Taxmod\Core\Import\Mail\OrderMailParser;
 
 /**
  * The boundary: the «JLCPCB» tab of the modeller's Configuration page (D-945) and the connection test. It wires
@@ -16,7 +18,7 @@ use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.10';
+    public const VERSION    = '0.1.11';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -46,8 +48,18 @@ final class Plugin
 
             return $rows;
         });
+        // ⚠️ *D-1006: JLCPCB's mails are read here, not in Taxmod Mail, which only fetches them (needs modeller 0.1.81).*
+        add_filter('taxmail_parsers', static fn (array $parsers): array => ($reader = self::mailReader()) === null ? $parsers : [...$parsers, $reader]);
         add_action('admin_notices', $plugin->noticeWithoutTabs(...));
         ReorderPage::boot();
+    }
+
+    /** The reader of JLCPCB's mails, once; null while the modeller lacks the mail contract (before 0.1.81). */
+    public static function mailReader(): ?JlcpcbMailParser
+    {
+        static $reader = null;
+
+        return $reader ??= interface_exists(OrderMailParser::class) ? new JlcpcbMailParser(self::VERSION) : null;
     }
 
     private static function hasInbox(): bool
@@ -72,6 +84,7 @@ final class Plugin
             'render'      => fn (): string => (new SettingsScreen(new StoredCredentials()))->fields($this->takeNotices()),
             'save'        => static fn (array $post): bool => self::saveKeys($post),
             'guide'       => static fn (): string => SettingsScreen::guide(),
+            'reader'      => self::mailReader(),
         ];
 
         return $tabs;
