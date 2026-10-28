@@ -16,7 +16,7 @@ use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.9';
+    public const VERSION    = '0.1.10';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -47,6 +47,7 @@ final class Plugin
             return $rows;
         });
         add_action('admin_notices', $plugin->noticeWithoutTabs(...));
+        ReorderPage::boot();
     }
 
     private static function hasInbox(): bool
