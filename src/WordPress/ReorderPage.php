@@ -95,17 +95,12 @@ final class ReorderPage
 
     private static function specs(int $recordId): BoardSpecs
     {
-        $values = null;
-
-        foreach (self::readNode(RevisionFields::NODE)['records'] ?? [] as $record) {
-            if ((int) ($record['id'] ?? 0) === $recordId) {
-                $values = [];
-
-                foreach ($record['values'] ?? [] as $value) {
-                    $values[(int) $value['relation_id']][] = (string) $value['value'];
-                }
-            }
+        if (! class_exists(\Taxmod\WordPress\ModelDoor::class)) {
+            throw new \RuntimeException(__('The Taxonomy Modeller does not answer — is it active?', 'taxapijlcpcb'));
         }
+
+        $door   = new \Taxmod\WordPress\ModelDoor();
+        $values = self::read(static fn (): array => $door->records(RevisionFields::NODE))[$recordId] ?? null;
 
         if ($values === null) {
             throw new \RuntimeException(__('This record is not a board revision.', 'taxapijlcpcb'));
@@ -114,11 +109,9 @@ final class ReorderPage
         $labels = [];
 
         foreach (RevisionFields::CHOICE_NODES as $node) {
-            foreach (self::readNode($node)['records'] ?? [] as $record) {
-                foreach ($record['values'] ?? [] as $value) {
-                    if ((int) $value['relation_id'] === RevisionFields::NAME) {
-                        $labels[(int) $record['id']] = (string) $value['value'];
-                    }
+            foreach (self::read(static fn (): array => $door->records($node)) as $id => $fields) {
+                if (isset($fields[RevisionFields::NAME][0])) {
+                    $labels[$id] = $fields[RevisionFields::NAME][0];
                 }
             }
         }
@@ -126,21 +119,18 @@ final class ReorderPage
         return BoardSpecs::fromValues($values, $labels);
     }
 
-    /** @return array<string, mixed> */
-    private static function readNode(int $node): array
+    /**
+     * Through the modeller's one door (D-1186); a refusal is worded for this page.
+     *
+     * @param callable(): array<int, array<int, list<string>>> $read
+     * @return array<int, array<int, list<string>>>
+     */
+    private static function read(callable $read): array
     {
-        $ability = function_exists('wp_get_ability') ? wp_get_ability('taxmod/read-node') : null;
-
-        if ($ability === null) {
-            throw new \RuntimeException(__('The Taxonomy Modeller does not answer — is it active?', 'taxapijlcpcb'));
+        try {
+            return $read();
+        } catch (\Taxmod\Core\Exception\ModelDoorRefused $refused) {
+            throw new \RuntimeException($refused->getMessage());
         }
-
-        $result = $ability->execute(['node' => $node]);
-
-        if (is_wp_error($result)) {
-            throw new \RuntimeException($result->get_error_message());
-        }
-
-        return is_array($result) ? $result : [];
     }
 }
