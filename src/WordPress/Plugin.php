@@ -18,7 +18,7 @@ use Taxmod\Core\Import\Mail\OrderMailParser;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.12';
+    public const VERSION    = '0.1.13';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 

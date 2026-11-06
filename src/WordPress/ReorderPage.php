@@ -58,7 +58,7 @@ final class ReorderPage
             return '';
         }
 
-        $html = '<div class="wrap"><h1>' . esc_html__('Reorder at JLCPCB', 'taxapijlcpcb') . '</h1>';
+        $html = '<div class="wrap">' . (class_exists(\Taxmod\WordPress\Admin\ListPage::class) ? \Taxmod\WordPress\Admin\ListPage::heading(__('Reorder at JLCPCB', 'taxapijlcpcb'), Plugin::VERSION) : '');
 
         try {
             $specs = self::specs($recordId);
