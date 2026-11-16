@@ -8,15 +8,21 @@ use TaxApiJlcpcb\Core\Reorder\RevisionFields;
 
 final class BoardSpecsTest extends TestCase
 {
+    private static function fields(): RevisionFields
+    {
+        return RevisionFields::fromRoles(static fn (string $role): int => crc32('n' . $role), static fn (string $role): int => crc32('f' . $role));
+    }
+
     public function testReadsValuesAndNamesChoices(): void
     {
+        $f     = self::fields();
         $specs = BoardSpecs::fromValues([
-            RevisionFields::NAME        => ['1541 II USB Power Adapter 1'],
-            RevisionFields::LAYERS      => ['2'],
-            RevisionFields::THICKNESS   => ['1.6'],
-            RevisionFields::SOLDER_MASK => ['149000110188'],
-            RevisionFields::SURFACE     => ['149000110194'],
-        ], [149000110188 => 'Blau', 149000110194 => 'HASL bleifrei']);
+            $f->name        => ['1541 II USB Power Adapter 1'],
+            $f->layers      => ['2'],
+            $f->thickness   => ['1.6'],
+            $f->solderMask  => ['149000110188'],
+            $f->surface     => ['149000110194'],
+        ], [149000110188 => 'Blau', 149000110194 => 'HASL bleifrei'], $f);
 
         self::assertSame(['1541 II USB Power Adapter 1', 2, '1.6', 'Blau', 'HASL bleifrei', null, null], [
             $specs->name, $specs->layers, $specs->thicknessMm, $specs->solderMaskColour, $specs->surfaceFinish, $specs->outerCopperOz, $specs->innerCopperOz,
@@ -26,6 +32,6 @@ final class BoardSpecsTest extends TestCase
 
     public function testNothingKnownIsEmpty(): void
     {
-        self::assertTrue(BoardSpecs::fromValues([RevisionFields::NAME => ['X']], [])->isEmpty());
+        self::assertTrue(BoardSpecs::fromValues([self::fields()->name => ['X']], [], self::fields())->isEmpty());
     }
 }

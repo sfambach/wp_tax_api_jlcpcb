@@ -22,6 +22,32 @@ final class ReorderPage
         // The filter of the modeller 0.1.74 or later; an older one simply never asks.
         add_filter('taxmod_record_actions', [self::class, 'action'], 10, 3);
         add_action('admin_menu', [self::class, 'register'], 20);
+        // D-1394: the roles this page needs, so the modeller can say which are not set on this site.
+        add_filter('taxmod_roles', static function (array $roles): array {
+            foreach (RevisionFields::ROLES as $group => $keys) {
+                foreach ($keys as $key => $required) {
+                    $roles[] = ['module' => 'jlcpcb', 'group' => $group, 'key' => $key, 'required' => $required];
+                }
+            }
+
+            return $roles;
+        });
+    }
+
+    /** The revision's fields by role (D-1394); null while the modeller has no role table or a role is not set here. */
+    private static function fields(): ?RevisionFields
+    {
+        if (! method_exists(\Taxmod\WordPress\ModelDoor::class, 'roles')) {
+            return null;
+        }
+
+        try {
+            $roles = \Taxmod\WordPress\ModelDoor::roles();
+
+            return RevisionFields::fromRoles($roles->node(...), $roles->field(...));
+        } catch (\Taxmod\Core\Exception\RoleMissing) {
+            return null;
+        }
     }
 
     /**
@@ -30,7 +56,7 @@ final class ReorderPage
      */
     public static function action(array $actions, int $nodeId, int $recordId): array
     {
-        if ($nodeId !== RevisionFields::NODE || ! current_user_can(Plugin::CAPABILITY)) {
+        if (! current_user_can(Plugin::CAPABILITY) || $nodeId !== self::fields()?->node) {
             return $actions;
         }
 
@@ -99,8 +125,9 @@ final class ReorderPage
             throw new \RuntimeException(__('The Taxonomy Modeller does not answer — is it active?', 'taxapijlcpcb'));
         }
 
+        $fields = self::fields() ?? throw new \RuntimeException(__('The Taxonomy Modeller does not know where board revisions are kept — update it or set the roles.', 'taxapijlcpcb'));
         $door   = new \Taxmod\WordPress\ModelDoor();
-        $values = self::read(static fn (): array => $door->records(RevisionFields::NODE))[$recordId] ?? null;
+        $values = self::read(static fn (): array => $door->records($fields->node))[$recordId] ?? null;
 
         if ($values === null) {
             throw new \RuntimeException(__('This record is not a board revision.', 'taxapijlcpcb'));
@@ -108,15 +135,15 @@ final class ReorderPage
 
         $labels = [];
 
-        foreach (RevisionFields::CHOICE_NODES as $node) {
-            foreach (self::read(static fn (): array => $door->records($node)) as $id => $fields) {
-                if (isset($fields[RevisionFields::NAME][0])) {
-                    $labels[$id] = $fields[RevisionFields::NAME][0];
+        foreach ($fields->choiceNodes as $node) {
+            foreach (self::read(static fn (): array => $door->records($node)) as $id => $choice) {
+                if (isset($choice[$fields->name][0])) {
+                    $labels[$id] = $choice[$fields->name][0];
                 }
             }
         }
 
-        return BoardSpecs::fromValues($values, $labels);
+        return BoardSpecs::fromValues($values, $labels, $fields);
     }
 
     /**

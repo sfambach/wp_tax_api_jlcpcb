@@ -25,20 +25,20 @@ final class BoardSpecs
      * @param array<int, list<string>> $values relation id → the stored values of the revision
      * @param array<int, string> $choiceLabels record id of a choice → its label
      */
-    public static function fromValues(array $values, array $choiceLabels): self
+    public static function fromValues(array $values, array $choiceLabels, RevisionFields $fields): self
     {
         $first = static fn (int $relation): ?string => isset($values[$relation][0]) && $values[$relation][0] !== '' ? $values[$relation][0] : null;
         $choice = static fn (int $relation): ?string => ($id = $first($relation)) === null ? null : ($choiceLabels[(int) $id] ?? $id);
-        $layers = $first(RevisionFields::LAYERS);
+        $layers = $first($fields->layers);
 
         return new self(
-            $first(RevisionFields::NAME) ?? '',
+            $first($fields->name) ?? '',
             $layers === null ? null : (int) $layers,
-            $first(RevisionFields::THICKNESS),
-            $choice(RevisionFields::SOLDER_MASK),
-            $choice(RevisionFields::SURFACE),
-            $first(RevisionFields::OUTER_COPPER),
-            $first(RevisionFields::INNER_COPPER),
+            $first($fields->thickness),
+            $choice($fields->solderMask),
+            $choice($fields->surface),
+            $first($fields->outerCopper),
+            $first($fields->innerCopper),
         );
     }
 
