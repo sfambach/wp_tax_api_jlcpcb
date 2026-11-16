@@ -2,7 +2,7 @@
 
 namespace TaxApiJlcpcb\WordPress;
 
-use Taxmod\Core\Exception\SecretDoesNotOpen;
+use Taxmod\Core\Import\SecretSlot;
 use Taxmod\WordPress\Import\Vault;
 use TaxApiJlcpcb\Core\Api\CredentialSource;
 use TaxApiJlcpcb\Core\Api\Credentials;
@@ -87,11 +87,8 @@ final class StoredCredentials implements CredentialSource
 
     private function open(string $sealed): ?string
     {
-        try {
-            return Vault::for(self::VAULT_CONTEXT)->open($sealed);
-        } catch (SecretDoesNotOpen) {
-            return null;
-        }
+        // D-1409: opening and «does not open» live once, in the modeller's SecretSlot.
+        return (new SecretSlot('', $sealed, Vault::for(self::VAULT_CONTEXT)))->value();
     }
 
     /** @return array{app_id: string, access_key: string, secret: string} */
