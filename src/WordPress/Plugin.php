@@ -8,7 +8,7 @@ use TaxApiJlcpcb\Core\Api\JlcClient;
 use TaxApiJlcpcb\Core\Mail\JlcpcbMailParser;
 use TaxApiJlcpcb\Core\Orders\BatchList;
 use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;
-use Taxmod\Core\Import\Mail\OrderMailParser;
+use Taxmod\Core\Import\Mail\ShopMailParser;
 
 /**
  * The boundary: the «JLCPCB» tab of the modeller's Configuration page (D-945) and the connection test. It wires
@@ -18,7 +18,7 @@ use Taxmod\Core\Import\Mail\OrderMailParser;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.15';
+    public const VERSION    = '0.1.16';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -29,6 +29,12 @@ final class Plugin
     {
         $plugin = new self();
 
+        // D-1409: the mail reader stands on the modeller's ShopMailParser; an older modeller gets no reader, and says so.
+        add_action('admin_notices', static function (): void {
+            if (class_exists(\Taxmod\WordPress\Plugin::class, false) && ! class_exists(ShopMailParser::class)) {
+                print '<div class="notice notice-warning"><p><strong>Taxmod JLCPCB:</strong> ' . esc_html__('reads its mails only with the Taxonomy Modeller 0.2.120 or later.', 'taxapijlcpcb') . '</p></div>';
+            }
+        });
         add_filter('taxmod_config_tabs', $plugin->registerTab(...));
         add_action('admin_post_taxapijlcpcb_list', self::act($plugin->handleList(...)));
         add_action('admin_post_taxapijlcpcb_detail', self::act($plugin->handleDetail(...)));
@@ -59,7 +65,7 @@ final class Plugin
     {
         static $reader = null;
 
-        return $reader ??= interface_exists(OrderMailParser::class) ? new JlcpcbMailParser(self::VERSION) : null;
+        return $reader ??= class_exists(ShopMailParser::class) ? new JlcpcbMailParser(self::VERSION) : null;
     }
 
     private static function hasInbox(): bool

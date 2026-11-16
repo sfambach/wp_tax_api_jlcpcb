@@ -3,7 +3,7 @@
 namespace TaxApiJlcpcb\Core\Mail;
 
 use Taxmod\Core\Import\Mail\MailMessage;
-use Taxmod\Core\Import\Mail\OrderMailParser;
+use Taxmod\Core\Import\Mail\ShopMailParser;
 use Taxmod\Core\Import\OrderProposal;
 use Taxmod\Core\Import\ProposalKind;
 use Taxmod\Core\Import\ProposalLine;
@@ -18,24 +18,16 @@ use Taxmod\Core\Import\ProposalLine;
  *
  * @see https://github.com/sfambach/wp-taxonomy-modeler/blob/main/docs/pakete/import/module-schnitt.md
  */
-final class JlcpcbMailParser implements OrderMailParser
+final class JlcpcbMailParser extends ShopMailParser
 {
-    public function __construct(private readonly string $version)
-    {
-    }
 
     private const ORDER = '/\bW\d{14,16}\b/';
     private const PIECES = '/^(\d+) pcs$/';
     private const SMT = '/^SMT\d{12}$/';
 
-    public function key(): string
+    public function __construct(string $version)
     {
-        return 'jlcpcb';
-    }
-
-    public function shopName(): string
-    {
-        return 'JLCPCB';
+        parent::__construct('jlcpcb', 'JLCPCB', [ProposalKind::Ordered, ProposalKind::Shipped], [], $version);
     }
 
     public function recognises(MailMessage $mail): bool
@@ -197,13 +189,4 @@ final class JlcpcbMailParser implements OrderMailParser
         return null;
     }
 
-    public function kinds(): array
-    {
-        return [ProposalKind::Ordered, ProposalKind::Shipped];
-    }
-
-    public function version(): string
-    {
-        return $this->version;
-    }
 }
