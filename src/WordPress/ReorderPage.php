@@ -2,6 +2,7 @@
 
 namespace TaxApiJlcpcb\WordPress;
 
+use Taxmod\WordPress\Admin\ListPage;
 use TaxApiJlcpcb\Core\Reorder\BoardSpecs;
 use TaxApiJlcpcb\Core\Reorder\RevisionFields;
 
@@ -84,12 +85,12 @@ final class ReorderPage
             return '';
         }
 
-        $html = '<div class="wrap">' . (class_exists(\Taxmod\WordPress\Admin\ListPage::class) ? \Taxmod\WordPress\Admin\ListPage::heading(__('Reorder at JLCPCB', 'taxapijlcpcb'), Plugin::VERSION) : '');
+        $back = ListPage::back(add_query_arg(['page' => 'taxmod', 'taxmod_open_record' => (string) $recordId], admin_url('admin.php')), __('Back to the record', 'taxapijlcpcb'));
 
         try {
             $specs = self::specs($recordId);
         } catch (\RuntimeException $failure) {
-            return $html . '<div class="notice notice-error inline"><p>' . esc_html($failure->getMessage()) . '</p></div></div>';
+            return self::framed($back . '<div class="notice notice-error inline"><p>' . esc_html($failure->getMessage()) . '</p></div>');
         }
 
         $rows = [
@@ -101,22 +102,29 @@ final class ReorderPage
             __('Inner copper (oz)', 'taxapijlcpcb')  => $specs->innerCopperOz,
         ];
 
-        $html .= '<h2>' . esc_html($specs->name) . '</h2>';
+        $html = $back . '<h2>' . esc_html($specs->name) . '</h2>';
 
         if ($specs->isEmpty()) {
             $html .= '<div class="notice notice-warning inline"><p>' . esc_html__('This revision holds no manufacturing settings yet. Fill them in the record first.', 'taxapijlcpcb') . '</p></div>';
         }
 
-        $html .= '<table class="widefat striped" style="max-width:40em"><tbody>';
+        $facts = [];
 
         foreach ($rows as $label => $value) {
-            $html .= '<tr><th scope="row">' . esc_html($label) . '</th><td>' . ($value === null ? '<span class="description">—</span>' : '<code>' . esc_html($value) . '</code>') . '</td></tr>';
+            $facts[] = [esc_html($label), $value === null ? '<span class="description">—</span>' : '<code>' . esc_html($value) . '</code>'];
         }
 
-        return $html . '</tbody></table>'
-            . '<p>' . esc_html__('Upload the Gerber file in the quote form, type in these values, then order and pay at JLCPCB as usual. Nothing is ordered from here.', 'taxapijlcpcb') . '</p>'
-            . '<p><a class="button button-primary" href="' . esc_url(self::QUOTE_URL) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open the JLCPCB quote form', 'taxapijlcpcb') . '</a> '
-            . '<a class="button" href="' . esc_url(add_query_arg(['page' => 'taxmod', 'taxmod_open_record' => (string) $recordId], admin_url('admin.php'))) . '">' . esc_html__('Back to the record', 'taxapijlcpcb') . '</a></p></div>';
+        // D-1308: the act in the toolbar above, D-1409: the facts in the shared read-only table.
+        return self::framed($html
+            . ListPage::toolbar(['<a class="button button-primary" href="' . esc_url(self::QUOTE_URL) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open the JLCPCB quote form', 'taxapijlcpcb') . '</a>'])
+            . ListPage::grid([], $facts)
+            . '<p>' . esc_html__('Upload the Gerber file in the quote form, type in these values, then order and pay at JLCPCB as usual. Nothing is ordered from here.', 'taxapijlcpcb') . '</p>');
+    }
+
+    /** D-1373, G16: the page in the shared template. */
+    private static function framed(string $body): string
+    {
+        return ListPage::page(__('Reorder at JLCPCB', 'taxapijlcpcb'), [], [['html' => $body]], Plugin::VERSION);
     }
 
     private static function specs(int $recordId): BoardSpecs

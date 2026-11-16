@@ -18,7 +18,7 @@ use Taxmod\Core\Import\Mail\ShopMailParser;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.16';
+    public const VERSION    = '0.1.17';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
