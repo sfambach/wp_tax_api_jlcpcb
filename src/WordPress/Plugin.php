@@ -19,7 +19,7 @@ use Taxmod\Core\Import\Mail\ShopMailParser;
  */
 final class Plugin
 {
-    public const VERSION    = '0.1.17';
+    public const VERSION    = '0.1.18';
     public const CAPABILITY = 'manage_options';
     public const TAB        = 'jlcpcb';
 
@@ -30,15 +30,22 @@ final class Plugin
     {
         $plugin = new self();
 
-        // D-1409: the mail reader stands on the modeller's ShopMailParser; an older modeller gets no reader, and says so.
+        // D-1409, D-1415: this release stands on the modeller 0.2.123 (shared parser frame, HTTP block, ListPage::acting); an older one says so.
         add_action('admin_notices', static function (): void {
-            if (class_exists(\Taxmod\WordPress\Plugin::class, false) && ! class_exists(ShopMailParser::class)) {
-                print '<div class="notice notice-warning"><p><strong>Taxmod JLCPCB:</strong> ' . esc_html__('reads its mails only with the Taxonomy Modeller 0.2.120 or later.', 'taxapijlcpcb') . '</p></div>';
+            if (class_exists(\Taxmod\WordPress\Plugin::class, false) && ! method_exists(ListPage::class, 'acting')) {
+                print '<div class="notice notice-warning"><p><strong>Taxmod JLCPCB:</strong> ' . esc_html__('needs the Taxonomy Modeller 0.2.123 or later.', 'taxapijlcpcb') . '</p></div>';
             }
         });
         add_filter('taxmod_config_tabs', $plugin->registerTab(...));
-        add_action('admin_post_taxapijlcpcb_list', ListPage::acting($plugin->handleList(...), self::settingsUrl()));
-        add_action('admin_post_taxapijlcpcb_detail', ListPage::acting($plugin->handleDetail(...), self::settingsUrl()));
+        // ListPage::acting belongs to the modeller, which loads after this file (alphabetical order): hooked once every plugin is.
+        add_action('plugins_loaded', static function () use ($plugin): void {
+            if (! method_exists(ListPage::class, 'acting')) {
+                return;
+            }
+
+            add_action('admin_post_taxapijlcpcb_list', ListPage::acting($plugin->handleList(...), self::settingsUrl()));
+            add_action('admin_post_taxapijlcpcb_detail', ListPage::acting($plugin->handleDetail(...), self::settingsUrl()));
+        });
 
         // The inbox of the modeller 0.1.35 or later; without it the module only tests and lists. Checked when the filter
         // runs, not here: this file loads before the modeller's (alphabetical order), when its classes are not known yet.
