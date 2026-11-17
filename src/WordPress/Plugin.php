@@ -2,6 +2,7 @@
 
 namespace TaxApiJlcpcb\WordPress;
 
+use Taxmod\WordPress\Admin\ListPage;
 use TaxApiJlcpcb\Core\Api\ConnectionTest;
 use TaxApiJlcpcb\Core\Api\JlcApiException;
 use TaxApiJlcpcb\Core\Api\JlcClient;
@@ -36,8 +37,8 @@ final class Plugin
             }
         });
         add_filter('taxmod_config_tabs', $plugin->registerTab(...));
-        add_action('admin_post_taxapijlcpcb_list', self::act($plugin->handleList(...)));
-        add_action('admin_post_taxapijlcpcb_detail', self::act($plugin->handleDetail(...)));
+        add_action('admin_post_taxapijlcpcb_list', ListPage::acting($plugin->handleList(...), self::settingsUrl()));
+        add_action('admin_post_taxapijlcpcb_detail', ListPage::acting($plugin->handleDetail(...), self::settingsUrl()));
 
         // The inbox of the modeller 0.1.35 or later; without it the module only tests and lists. Checked when the filter
         // runs, not here: this file loads before the modeller's (alphabetical order), when its classes are not known yet.
@@ -239,7 +240,7 @@ final class Plugin
             self::refuse(__('You may not use the JLCPCB connection.', 'taxapijlcpcb'));
         }
 
-        self::nonce($action);
+        ListPage::nonce($action);
         $credentials = (new StoredCredentials())->credentials();
 
         if ($credentials === null) {
@@ -254,41 +255,11 @@ final class Plugin
      * The handler as an act (D-1254): an exception becomes a message in the tab's message field with the way back, never an
      * empty page. ListPage is named only inside the handler, so the boot does not compile it (D-1244).
      */
-    private static function act(\Closure $handler): \Closure
-    {
-        return static function () use ($handler): void {
-            if (! method_exists(\Taxmod\WordPress\Admin\ListPage::class, 'act')) {
-                $handler();
-
-                return;
-            }
-
-            \Taxmod\WordPress\Admin\ListPage::act(static function () use ($handler): string {
-                $handler();
-
-                return '';
-            }, self::settingsUrl());
-        };
-    }
-
-    /** A stale form is said on its page, through the modeller's own check from 0.2.40 on (D-1254). */
-    private static function nonce(string $action): void
-    {
-        if (method_exists(\Taxmod\WordPress\Admin\ListPage::class, 'nonce')) {
-            \Taxmod\WordPress\Admin\ListPage::nonce($action);
-        } elseif (! wp_verify_nonce(sanitize_text_field(wp_unslash((string) ($_REQUEST['_wpnonce'] ?? ''))), $action)) {
-            self::refuse(__('The form has expired. Please try again.', 'taxapijlcpcb'));
-        }
-    }
 
     /** A refusal as a message on the tab instead of a bare error page (D-1254). */
     private static function refuse(string $message): never
     {
-        if (method_exists(\Taxmod\WordPress\Admin\ListPage::class, 'fail')) {
-            \Taxmod\WordPress\Admin\ListPage::fail($message, self::settingsUrl());
-        }
-
-        wp_die(esc_html($message), '', ['response' => 403, 'back_link' => true]);
+        ListPage::fail($message, self::settingsUrl());
     }
 
     private function back(): never
