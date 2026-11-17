@@ -7,7 +7,7 @@ use Taxmod\Core\Import\OrderProposal;
 use Taxmod\Core\Import\ProposalKind;
 use Taxmod\Core\Import\ProposalLine;
 use TaxApiJlcpcb\Core\Api\Credentials;
-use TaxApiJlcpcb\Core\Api\HttpResponse;
+use Taxmod\Core\Http\HttpResponse;
 use TaxApiJlcpcb\Core\Api\JlcClient;
 use TaxApiJlcpcb\Core\Enrich\PriceCompletion;
 use TaxApiJlcpcb\Core\Orders\OrderDetailQuery;

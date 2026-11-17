@@ -2,9 +2,9 @@
 
 namespace TaxApiJlcpcb\Tests\Core;
 
-use TaxApiJlcpcb\Core\Api\HttpRequest;
-use TaxApiJlcpcb\Core\Api\HttpResponse;
-use TaxApiJlcpcb\Core\Api\HttpTransport;
+use Taxmod\Core\Http\HttpRequest;
+use Taxmod\Core\Http\HttpResponse;
+use Taxmod\Core\Http\HttpTransport;
 
 /**
  * Answers from a script and remembers what was asked.

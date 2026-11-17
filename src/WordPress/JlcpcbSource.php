@@ -80,6 +80,6 @@ final class JlcpcbSource implements FetchingSource, EnrichingSource
     {
         $credentials = (new StoredCredentials())->credentials();
 
-        return $credentials === null ? null : new JlcClient(new WpHttpTransport(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL);
+        return $credentials === null ? null : new JlcClient(ApiTransport::make(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL);
     }
 }

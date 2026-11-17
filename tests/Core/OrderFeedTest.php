@@ -7,7 +7,7 @@ use DateTimeZone;
 use PHPUnit\Framework\TestCase;
 use Taxmod\Core\Import\ProposalKind;
 use TaxApiJlcpcb\Core\Api\Credentials;
-use TaxApiJlcpcb\Core\Api\HttpResponse;
+use Taxmod\Core\Http\HttpResponse;
 use TaxApiJlcpcb\Core\Api\JlcClient;
 use TaxApiJlcpcb\Core\Feed\BoardTitle;
 use TaxApiJlcpcb\Core\Feed\OrderFeed;

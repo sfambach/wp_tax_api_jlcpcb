@@ -217,7 +217,7 @@ final class Plugin
         }
 
         try {
-            $component = (new ConnectionTest(new JlcClient(new WpHttpTransport(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL)))->run();
+            $component = (new ConnectionTest(new JlcClient(ApiTransport::make(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL)))->run();
             update_option('taxmod_jlcpcb_last_check', ['ok' => true, 'at' => current_time('mysql'), 'message' => ''], false);
 
             return sprintf(
@@ -247,7 +247,7 @@ final class Plugin
             $this->back();
         }
 
-        return new JlcClient(new WpHttpTransport(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL);
+        return new JlcClient(ApiTransport::make(), $credentials, ConstantCredentials::baseUrl() ?? JlcClient::BASE_URL);
     }
 
     /**

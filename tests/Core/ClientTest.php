@@ -5,7 +5,7 @@ namespace TaxApiJlcpcb\Tests\Core;
 use PHPUnit\Framework\TestCase;
 use TaxApiJlcpcb\Core\Api\ConnectionTest;
 use TaxApiJlcpcb\Core\Api\Credentials;
-use TaxApiJlcpcb\Core\Api\HttpResponse;
+use Taxmod\Core\Http\HttpResponse;
 use TaxApiJlcpcb\Core\Api\JlcApiException;
 use TaxApiJlcpcb\Core\Api\JlcClient;
 use TaxApiJlcpcb\Core\Api\RequestSigner;

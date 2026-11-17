@@ -2,6 +2,9 @@
 
 namespace TaxApiJlcpcb\Core\Api;
 
+use Taxmod\Core\Http\HttpRequest;
+use Taxmod\Core\Http\HttpTransport;
+
 /**
  * Signed POST to the JLC Open Platform. HTTP 200 only means «received»; success is `code` 200 in the body.
  *
