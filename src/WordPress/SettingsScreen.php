@@ -2,6 +2,8 @@
 
 namespace TaxApiJlcpcb\WordPress;
 
+use Taxmod\WordPress\Admin\ListPage;
+
 /**
  * The «JLCPCB» tab parts: the key fields (Access) and the probes (Settings). Returns their HTML (CD-8). The modeller
  * wraps them in its own form and draws Save, Test connection, Delete and the fetch interval (D-981). The secret is never shown.
@@ -95,11 +97,11 @@ final class SettingsScreen
 
         if ($ready) {
             $url = wp_nonce_url(admin_url('admin-post.php?action=taxapijlcpcb_list'), 'taxapijlcpcb_list');
-            $html .= '<p><a class="button" href="' . esc_url($url) . '">' . esc_html(sprintf(
+            $html .= '<p>' . ListPage::button(sprintf(
                 /* translators: %d: days */
                 __('List orders of the last %d days', 'taxapijlcpcb'),
                 Plugin::LIST_DAYS
-            )) . '</a></p>';
+            ), $url) . '</p>';
         }
 
         $last = get_option('taxmod_jlcpcb_last_list');
@@ -140,7 +142,7 @@ final class SettingsScreen
             return '';
         }
 
-        $money = static fn (mixed $v): string => is_numeric($v) ? number_format((float) $v, 2, '.', '') . ' USD' : '–';
+        $money = static fn (mixed $v): string => is_numeric($v) ? ListPage::money((float) $v, 'USD') : '–';
         $html = '<h3>' . esc_html(sprintf(
             /* translators: 1: order number, 2: date */
             __('Details of %1$s (read %2$s)', 'taxapijlcpcb'),

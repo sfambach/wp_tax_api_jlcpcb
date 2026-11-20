@@ -116,7 +116,7 @@ final class ReorderPage
 
         // D-1308: the act in the toolbar above, D-1409: the facts in the shared read-only table.
         return self::framed($html
-            . ListPage::toolbar(['<a class="button button-primary" href="' . esc_url(self::QUOTE_URL) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open the JLCPCB quote form', 'taxapijlcpcb') . '</a>'])
+            . ListPage::toolbar([ListPage::button(__('Open the JLCPCB quote form', 'taxapijlcpcb'), self::QUOTE_URL, true, attributes: ['target' => '_blank', 'rel' => 'noopener noreferrer'])])
             . ListPage::grid([], $facts)
             . '<p>' . esc_html__('Upload the Gerber file in the quote form, type in these values, then order and pay at JLCPCB as usual. Nothing is ordered from here.', 'taxapijlcpcb') . '</p>');
     }
