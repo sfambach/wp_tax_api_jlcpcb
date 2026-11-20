@@ -2,6 +2,7 @@
 
 namespace TaxApiJlcpcb\WordPress;
 
+use Taxmod\Core\Description\InputKind;
 use Taxmod\WordPress\Admin\ListPage;
 
 /**
@@ -86,8 +87,7 @@ final class SettingsScreen
     private function inputRow(string $name, string $label, string $type, string $value, string $placeholder): string
     {
         return '<tr><th scope="row"><label for="taxapijlcpcb-' . esc_attr($name) . '">' . esc_html($label) . '</label></th>'
-            . '<td><input type="' . esc_attr($type) . '" class="regular-text" autocomplete="off" id="taxapijlcpcb-' . esc_attr($name)
-            . '" name="taxapijlcpcb_' . esc_attr($name) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($placeholder) . '"></td></tr>';
+            . '<td>' . ListPage::field($type === 'password' ? InputKind::Secret : InputKind::Line, 'taxapijlcpcb_' . $name, $value, ['id' => 'taxapijlcpcb-' . $name, 'size' => 40, 'placeholder' => $placeholder]) . '</td></tr>';
     }
 
     /** Step 2: the probe list of order numbers, read-only. */
