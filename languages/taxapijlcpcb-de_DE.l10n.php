@@ -66,7 +66,7 @@ return [
         'cancelled'                                                                      => 'storniert',
         'confirmed'                                                                      => 'bestätigt',
         'in production'                                                                  => 'in Fertigung',
-        'needs the Taxonomy Modeller 0.2.173 or later.'                                  => 'braucht den Taxonomy Modeller ab 0.2.173.',
+        'needs the Taxonomy Modeller 0.2.174 or later.'                                  => 'braucht den Taxonomy Modeller ab 0.2.174.',
         'needs the Taxonomy Modeller with configuration tabs (0.1.27 or later).'         => 'braucht den Taxonomy Modeller mit Einstellungsreitern (ab 0.1.27).',
         'pending review'                                                                 => 'in Prüfung',
         'run "composer install" in the plugin folder — the autoloader is missing.'       => 'im Plugin-Ordner «composer install» ausführen — der Autoloader fehlt.',
