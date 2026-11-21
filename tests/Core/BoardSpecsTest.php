@@ -44,16 +44,6 @@ final class BoardSpecsTest extends TestCase
         self::assertSame(['1,6 mm', 'Schwarz', 'HASL bleifrei', null], [$specs->thicknessMm, $specs->solderMaskColour, $specs->surfaceFinish, $specs->innerCopperOz]);
     }
 
-    /** Live-Check 21 (48255): the record's name in front of each word is left out. */
-    public function testTheRecordsNameInFrontOfAWordIsLeftOut(): void
-    {
-        $f     = self::fields();
-        $specs = BoardSpecs::fromValues([$f->name => ['MCEBlaster (THT) Rev 0.1'], $f->thickness => ['87928'], $f->solderMask => ['149000110188']], [], $f,
-            [$f->thickness => 'MCEBlaster (THT) Rev 0.1 · 1,6 mm', $f->solderMask => 'Schwarz']);
-
-        self::assertSame(['1,6 mm', 'Schwarz'], [$specs->thicknessMm, $specs->solderMaskColour]);
-    }
-
     public function testNothingKnownIsEmpty(): void
     {
         self::assertTrue(BoardSpecs::fromValues([self::fields()->name => ['X']], [], self::fields())->isEmpty());

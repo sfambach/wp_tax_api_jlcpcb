@@ -30,10 +30,7 @@ final class BoardSpecs
     public static function fromValues(array $values, array $choiceLabels, RevisionFields $fields, array $words = []): self
     {
         $first  = static fn (int $relation): ?string => isset($values[$relation][0]) && $values[$relation][0] !== '' ? $values[$relation][0] : null;
-        // Live-Check 21: the modeller's summary words lead with the record's name («MCEBlaster (THT) Rev 0.1 · 1,6 mm»); only the value shows.
-        $own    = ($first($fields->name) ?? '') . ' · ';
-        $word   = static fn (string $text): string => $own !== ' · ' && str_starts_with($text, $own) ? substr($text, strlen($own)) : $text;
-        $worded = static fn (int $relation): ?string => $first($relation) === null ? null : (($w = $word($words[$relation] ?? '')) !== '' ? $w : null);
+        $worded = static fn (int $relation): ?string => $first($relation) === null ? null : (($words[$relation] ?? '') !== '' ? $words[$relation] : null);
         $choice = static fn (int $relation): ?string => $worded($relation) ?? (($id = $first($relation)) === null ? null : ($choiceLabels[(int) $id] ?? $id));
         $layers = $first($fields->layers);
 
