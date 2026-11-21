@@ -153,7 +153,17 @@ final class ReorderPage
             }
         }
 
-        return BoardSpecs::fromValues($values, $labels, $fields);
+        // Live-Check 19: thickness, colour and finish are stored as ids of constants and unit values; the modeller words them.
+        $relations = [$fields->thickness, $fields->solderMask, $fields->surface, $fields->outerCopper, $fields->innerCopper];
+        $words     = [];
+
+        foreach (method_exists($door, 'fieldWords') ? $door->fieldWords([$recordId], $relations) : [] as $relation => $byRecord) {
+            if (is_array($byRecord) && isset($byRecord[$recordId])) {
+                $words[(int) $relation] = (string) $byRecord[$recordId];
+            }
+        }
+
+        return BoardSpecs::fromValues($values, $labels, $fields, $words);
     }
 
     /**

@@ -24,21 +24,24 @@ final class BoardSpecs
     /**
      * @param array<int, list<string>> $values relation id → the stored values of the revision
      * @param array<int, string> $choiceLabels record id of a choice → its label
+     * @param array<int, string> $words Prüftor Live-Check 19: relation id → the value as the modeller words it (D-1291); it wins over
+     *                                  the stored id, which is never shown
      */
-    public static function fromValues(array $values, array $choiceLabels, RevisionFields $fields): self
+    public static function fromValues(array $values, array $choiceLabels, RevisionFields $fields, array $words = []): self
     {
-        $first = static fn (int $relation): ?string => isset($values[$relation][0]) && $values[$relation][0] !== '' ? $values[$relation][0] : null;
-        $choice = static fn (int $relation): ?string => ($id = $first($relation)) === null ? null : ($choiceLabels[(int) $id] ?? $id);
+        $first  = static fn (int $relation): ?string => isset($values[$relation][0]) && $values[$relation][0] !== '' ? $values[$relation][0] : null;
+        $worded = static fn (int $relation): ?string => $first($relation) === null ? null : (($words[$relation] ?? '') !== '' ? $words[$relation] : null);
+        $choice = static fn (int $relation): ?string => $worded($relation) ?? (($id = $first($relation)) === null ? null : ($choiceLabels[(int) $id] ?? $id));
         $layers = $first($fields->layers);
 
         return new self(
             $first($fields->name) ?? '',
             $layers === null ? null : (int) $layers,
-            $first($fields->thickness),
+            $worded($fields->thickness) ?? $first($fields->thickness),
             $choice($fields->solderMask),
             $choice($fields->surface),
-            $first($fields->outerCopper),
-            $first($fields->innerCopper),
+            $worded($fields->outerCopper) ?? $first($fields->outerCopper),
+            $worded($fields->innerCopper) ?? $first($fields->innerCopper),
         );
     }
 
