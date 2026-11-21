@@ -76,7 +76,9 @@ final class ReorderPage
         add_submenu_page('taxmod', __('Reorder at JLCPCB', 'taxapijlcpcb'), '', Plugin::CAPABILITY, self::PAGE, static function (): void {
             print self::render(isset($_GET['record']) ? absint(wp_unslash((string) $_GET['record'])) : 0); // phpcs:ignore WordPress.Security -- read-only page, escaped in render()
         });
-        remove_submenu_page('taxmod', self::PAGE);
+        // Removed only when the menu is drawn: WordPress checks access to a page against the submenu, so removing the entry
+        // here locked the page («nicht berechtigt», Prüftor live check 21.11.).
+        add_action('admin_head', static fn () => remove_submenu_page('taxmod', self::PAGE));
     }
 
     private static function render(int $recordId): string
