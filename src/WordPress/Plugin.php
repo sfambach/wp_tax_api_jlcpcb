@@ -20,19 +20,20 @@ use Taxmod\Core\Import\Mail\ShopMailParser;
 final class Plugin
 {
     public const VERSION    = '0.1.24';
-    public const CAPABILITY = 'manage_options';
+    /** The connection is set up in the configuration (D-1585): the modeller's right «configure». */
+    public const CAPABILITY = \Taxmod\WordPress\Rights::CONFIGURE;
     public const TAB        = 'jlcpcb';
 
     /** Messages for the next page view of one user, after a redirect. */
     private const NOTICES = 'taxapijlcpcb_notices_';
 
     /**
-     * Whether the modeller is 0.2.174 or later (D-1409, D-1415; ListPage::button/money, D-1500) — asked by version, not by loading its classes: method_exists() on
+     * Whether the modeller is 0.2.237 or later (D-1409, D-1415; ListPage::button/money, D-1500) — asked by version, not by loading its classes: method_exists() on
      * ListPage compiled the 67 KB list page on every page view (D-1187; review 2026-11-17, Befund 6).
      */
     private static function modellerFits(): bool
     {
-        return class_exists(\Taxmod\WordPress\Plugin::class, false) && version_compare(\Taxmod\WordPress\Plugin::VERSION, '0.2.174', '>=');
+        return class_exists(\Taxmod\WordPress\Plugin::class, false) && version_compare(\Taxmod\WordPress\Plugin::VERSION, '0.2.237', '>=');
     }
 
     public static function boot(): void
@@ -42,10 +43,10 @@ final class Plugin
         // D-1500: the German texts in languages/ — WordPress finds a plugin's own folder only when asked.
         add_action('init', static fn () => load_plugin_textdomain('taxapijlcpcb', false, dirname(plugin_basename(dirname(__DIR__, 2) . '/wp-tax-api-jlcpcb.php')) . '/languages'), 1);
 
-        // D-1409, D-1415: this release stands on the modeller 0.2.174 (shared parser frame, HTTP block, ListPage::acting; button/money D-1500); an older one says so.
+        // D-1409, D-1415: this release stands on the modeller 0.2.237 (rights table D-1585; shared parser frame, HTTP block, ListPage::acting; button/money D-1500); an older one says so.
         add_action('admin_notices', static function (): void {
             if (class_exists(\Taxmod\WordPress\Plugin::class, false) && ! self::modellerFits()) {
-                print '<div class="notice notice-warning"><p><strong>Taxmod JLCPCB:</strong> ' . esc_html__('needs the Taxonomy Modeller 0.2.174 or later.', 'taxapijlcpcb') . '</p></div>';
+                print '<div class="notice notice-warning"><p><strong>Taxmod JLCPCB:</strong> ' . esc_html__('needs the Taxonomy Modeller 0.2.237 or later.', 'taxapijlcpcb') . '</p></div>';
             }
         });
         add_filter('taxmod_config_tabs', $plugin->registerTab(...));
