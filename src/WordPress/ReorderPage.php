@@ -57,7 +57,7 @@ final class ReorderPage
      */
     public static function action(array $actions, int $nodeId, int $recordId): array
     {
-        if (! current_user_can(Plugin::CAPABILITY) || $nodeId !== self::fields()?->node) {
+        if (! current_user_can(\Taxmod\WordPress\Rights::PURCHASE) || $nodeId !== self::fields()?->node) {
             return $actions;
         }
 
@@ -73,7 +73,7 @@ final class ReorderPage
     /** A page without a menu entry: it is reached from the button only. */
     public static function register(): void
     {
-        add_submenu_page('taxmod', __('Reorder at JLCPCB', 'taxapijlcpcb'), '', Plugin::CAPABILITY, self::PAGE, static function (): void {
+        add_submenu_page('taxmod', __('Reorder at JLCPCB', 'taxapijlcpcb'), '', \Taxmod\WordPress\Rights::PURCHASE, self::PAGE, static function (): void {
             print self::render(isset($_GET['record']) ? absint(wp_unslash((string) $_GET['record'])) : 0); // phpcs:ignore WordPress.Security -- read-only page, escaped in render()
         });
         // Removed only when the menu is drawn: WordPress checks access to a page against the submenu, so removing the entry
@@ -83,7 +83,7 @@ final class ReorderPage
 
     private static function render(int $recordId): string
     {
-        if (! current_user_can(Plugin::CAPABILITY)) {
+        if (! current_user_can(\Taxmod\WordPress\Rights::PURCHASE)) {
             return '';
         }
 
